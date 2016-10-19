@@ -26,7 +26,7 @@
             let $canvasContainer = $(".ui-simplepaint");
             let canvasManager = new simplepaint.CanvasManager($canvasContainer);
 
-            $(".ui-get-image").click(() => {
+            $(".ui-get-image").click(function() {
                 let base64 = canvasManager.getImage();
                 $image.attr("src", base64);
             });
