@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        //"outDir": "./js"
+        "outFile": "./dist/simplepaint.js"
+    },
+    "include": [
+        "ts/*.ts"
+    ],
+    "exclude": [
+        "js/*.js"
+    ]
+}
