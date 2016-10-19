@@ -16,6 +16,7 @@ let canvasManager = new simplepaint.CanvasManager($canvasContainer);
 ```
 export interface ICanvasManagerOptions {
     height?: number,
-    colours?: string[]
+    colours?: string[],
+    brushSizes?: number[]
 }
 ```

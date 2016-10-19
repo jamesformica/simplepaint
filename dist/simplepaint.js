@@ -41,6 +41,8 @@ var simplepaint;
                 var $colour = $(e.currentTarget);
                 _this.drawingManager.setColour($colour.data("colour"));
                 _this.$colourContainer.removeClass("open");
+                _this.$colourContainer.find(".selected").removeClass("selected");
+                $colour.addClass("selected");
             });
             this.$canvas.click(function () {
                 _this.$strokeContainer.removeClass("open");
@@ -54,6 +56,12 @@ var simplepaint;
             }
             else {
                 this.colours = ["#2ecc71", "#1abc9c", "#3498db", "#f1c40f", "#e67e22", "#e74c3c", "#9b59b6", "#bdc3c7", "#7f8c8d", "#34495e", "red", "orange", "blue", "lime", "aqua", "magenta", "#000000", "#ffffff"];
+            }
+            if (optionsSet && this.isNotNullOrUndefined(this.options.brushSizes)) {
+                this.brushSizes = this.options.brushSizes;
+            }
+            else {
+                this.brushSizes = [4, 8, 12, 16, 20, 24, 28, 32];
             }
             if (optionsSet && this.isNotNullOrUndefined(this.options.height)) {
                 this.$canvas.attr("height", this.options.height);
@@ -70,6 +78,11 @@ var simplepaint;
                 chosenColour = this.colours[Math.floor(Math.random() * this.colours.length)];
             } while (chosenColour.toLowerCase() === "#ffffff" || chosenColour.toLowerCase() === "white");
             this.drawingManager.setColour(chosenColour);
+            var $allColours = this.$colourContainer.find(".ui-colour-option");
+            var $chosenColour = $allColours.filter(function (index, element) {
+                return $(element).data("colour") === chosenColour;
+            });
+            $chosenColour.addClass("selected");
         };
         CanvasManager.prototype.isNotNullOrUndefined = function (value) {
             return value !== undefined && value !== null;
@@ -95,11 +108,11 @@ var simplepaint;
             this.$canvas = $b_canvas.appendTo($simplePaintContainer);
         };
         CanvasManager.prototype.buildStrokeOptions = function () {
-            for (var i = 4; i <= 32; i += 4) {
-                var $option = $("<i style='font-size: " + i + "px'></i>")
+            for (var i = 0; i < this.brushSizes.length; i++) {
+                var $option = $("<i style='font-size: " + this.brushSizes[i] + "px'></i>")
                     .addClass("fa fa-circle")
                     .addClass("option ui-stroke-option")
-                    .data("stroke", i);
+                    .data("stroke", this.brushSizes[i]);
                 this.$strokeContainer.append($option);
             }
         };

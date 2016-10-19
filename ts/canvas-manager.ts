@@ -3,9 +3,10 @@
 module simplepaint {
     "use strict";
 
-    export interface ICanvasManagerOptions {
+    interface ICanvasManagerOptions {
         height?: number,
-        colours?: string[]
+        colours?: string[],
+        brushSizes?: number[]
     }
 
     export class CanvasManager {
@@ -15,6 +16,7 @@ module simplepaint {
         private $colourContainer: JQuery;
 
         private colours: string[];
+        private brushSizes: number[];
         private drawingManager: simplepaint.DrawingManager;
 
         constructor(private $container: JQuery, private options?: ICanvasManagerOptions) {
@@ -58,8 +60,12 @@ module simplepaint {
 
             this.$colourContainer.on("click", ".ui-colour-option", (e) => {
                 let $colour = $(e.currentTarget);
+                
                 this.drawingManager.setColour($colour.data("colour"));
                 this.$colourContainer.removeClass("open");
+
+                this.$colourContainer.find(".selected").removeClass("selected");
+                $colour.addClass("selected");
             });
 
             this.$canvas.click(() => {
@@ -75,6 +81,12 @@ module simplepaint {
                 this.colours = this.options.colours;
             } else {
                 this.colours = ["#2ecc71", "#1abc9c", "#3498db", "#f1c40f", "#e67e22", "#e74c3c", "#9b59b6", "#bdc3c7", "#7f8c8d", "#34495e", "red", "orange", "blue", "lime", "aqua", "magenta", "#000000", "#ffffff"];
+            }
+
+            if (optionsSet && this.isNotNullOrUndefined(this.options.brushSizes)) {
+                this.brushSizes = this.options.brushSizes;
+            } else {
+                this.brushSizes = [4, 8, 12, 16, 20, 24, 28, 32];
             }
 
             if (optionsSet && this.isNotNullOrUndefined(this.options.height)) {
@@ -94,6 +106,13 @@ module simplepaint {
             } while (chosenColour.toLowerCase() === "#ffffff" || chosenColour.toLowerCase() === "white");
 
             this.drawingManager.setColour(chosenColour);
+
+            let $allColours = this.$colourContainer.find(".ui-colour-option");
+            let $chosenColour = $allColours.filter((index, element) => {
+                return $(element).data("colour") === chosenColour;
+            });
+
+            $chosenColour.addClass("selected");
         }
 
         private isNotNullOrUndefined(value: any): boolean {
@@ -131,12 +150,11 @@ module simplepaint {
         }
 
         private buildStrokeOptions(): void {
-            for (let i = 4; i <= 32; i += 4) {
-
-                let $option = $("<i style='font-size: " + i + "px'></i>")
+            for (let i = 0; i < this.brushSizes.length; i ++) {
+                let $option = $("<i style='font-size: " + this.brushSizes[i] + "px'></i>")
                     .addClass("fa fa-circle")
                     .addClass("option ui-stroke-option")
-                    .data("stroke", i);
+                    .data("stroke", this.brushSizes[i]);
 
                 this.$strokeContainer.append($option);
             }

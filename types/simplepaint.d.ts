@@ -1,8 +1,13 @@
+interface ICanvasManagerOptions {
+    height?: number,
+    colours?: string[],
+    brushSizes?: number[]
+}
+
 declare namespace simplepaint {
-    export class CanvasManager  {
+    class CanvasManager {
         constructor(canvas: HTMLCanvasElement);
 
-        // methods
         getImage(): string;
     }
 }

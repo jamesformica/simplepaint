@@ -76,11 +76,14 @@
     padding: 10px;
     flex-grow: 1;
     width: 32px;
-    height: 32px;
-    line-height: 32px;
+    min-height: 32px;
     text-align: center;
     color: black;
     cursor: pointer;
+}
+
+.simplepaint > .slider > .option.selected {
+    box-shadow: inset 0px 0px 0px 2px white;
 }
 
 .simplepaint > .slider > .option:hover {
