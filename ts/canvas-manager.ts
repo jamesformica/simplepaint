@@ -128,8 +128,8 @@ module simplepaint {
             let $b_simplePaint = $("<div class=\"simplepaint\"></div>");
 
             let $b_menu = $("<div class=\"menu\"></div>");
-            let $b_strokeOption = $("<i class=\"fa fa-paint-brush ui-show-stroke\" title=\"Brush Stroke\"></i>");
-            let $b_colourOption = $("<i class=\"fa fa-eyedropper ui-show-colour\" title=\"Brush Colour\"></i>");
+            let $b_strokeOption = $("<i class=\"fa fa-circle-o ui-show-stroke\" title=\"Stroke\"></i>");
+            let $b_colourOption = $("<i class=\"fa fa-paint-brush ui-show-colour\" title=\"Colour\"></i>");
             let $b_undo = $("<i class=\"fa fa-undo ui-undo\" title=\"Undo\"></i>")
             let $b_startAgainOption = $("<i class=\"fa fa-bomb ui-clear\" title=\"Start Again\"></i>");
 

@@ -93,8 +93,8 @@ var simplepaint;
         CanvasManager.prototype.buildSimplePaint = function () {
             var $b_simplePaint = $("<div class=\"simplepaint\"></div>");
             var $b_menu = $("<div class=\"menu\"></div>");
-            var $b_strokeOption = $("<i class=\"fa fa-paint-brush ui-show-stroke\" title=\"Brush Stroke\"></i>");
-            var $b_colourOption = $("<i class=\"fa fa-eyedropper ui-show-colour\" title=\"Brush Colour\"></i>");
+            var $b_strokeOption = $("<i class=\"fa fa-circle-o ui-show-stroke\" title=\"Stroke\"></i>");
+            var $b_colourOption = $("<i class=\"fa fa-paint-brush ui-show-colour\" title=\"Colour\"></i>");
             var $b_undo = $("<i class=\"fa fa-undo ui-undo\" title=\"Undo\"></i>");
             var $b_startAgainOption = $("<i class=\"fa fa-bomb ui-clear\" title=\"Start Again\"></i>");
             var $b_strokeContainer = $("<div class=\"slider\"></div>");
