@@ -45,7 +45,7 @@ module simplepaint {
 
         public undo(): void {
             if (this.drawnShapes.length > 0) {
-                this.startAgain();
+                this.stage.clear();
 
                 this.drawnShapes.pop();
                 this.stage.removeAllChildren();
@@ -60,6 +60,8 @@ module simplepaint {
 
         public startAgain(): void {
             this.stage.clear();
+            this.stage.removeAllChildren();
+            this.drawnShapes = [];
         }
 
         public getImage(): string {
@@ -68,6 +70,41 @@ module simplepaint {
 
             let base64 = bitmap.getCacheDataURL();
             return base64;
+        }
+
+        public fillFirst(): void {
+            let firstShape = this.drawnShapes[0];
+            let instructions: any[] = firstShape.graphics.getInstructions();
+
+            let points: createjs.Point[] = [];
+
+            instructions.forEach((instruction) => {
+                points.push(new createjs.Point(instruction.x, instruction.y))
+            });
+
+            let firstPointNotZero: createjs.Point;
+            for (let i = 0; i < points.length; i++) {
+                if (points[i].x > 0 && points[i].y > 0) {
+                    firstPointNotZero = points[i];
+                    break;
+                }
+            }
+
+            let poly = new createjs.Shape();
+            poly.x = firstShape.x;
+            poly.y = firstShape.y;
+            poly.graphics.beginFill(this.color);
+            poly.graphics.moveTo(firstPointNotZero.x, firstPointNotZero.y);
+
+            points.forEach((point) => {
+                if (point.x > 0 && point.y > 0) {
+                    poly.graphics.lineTo(point.x, point.y);
+                }
+            });
+
+            this.drawnShapes.push(poly);
+            this.stage.addChild(poly);
+            this.stage.update();
         }
 
         private attachMouseDown(manager: DrawingManager): void {

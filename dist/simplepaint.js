@@ -27,6 +27,9 @@ var simplepaint;
                 _this.$strokeContainer.removeClass("open");
                 _this.$colourContainer.toggleClass("open");
             });
+            this.$menu.find(".ui-fill").click(function () {
+                _this.drawingManager.fillFirst();
+            });
             this.$menu.find(".ui-undo").click(function () {
                 _this.drawingManager.undo();
             });
@@ -95,14 +98,15 @@ var simplepaint;
             var $b_menu = $("<div class=\"menu\"></div>");
             var $b_strokeOption = $("<i class=\"fa fa-circle-o ui-show-stroke\" title=\"Stroke\"></i>");
             var $b_colourOption = $("<i class=\"fa fa-paint-brush ui-show-colour\" title=\"Colour\"></i>");
-            var $b_undo = $("<i class=\"fa fa-undo ui-undo\" title=\"Undo\"></i>");
-            var $b_startAgainOption = $("<i class=\"fa fa-bomb ui-clear\" title=\"Start Again\"></i>");
+            var $b_fill = $("<i class=\"fa fa-diamond ui-fill\" title=\"Fill\"></i>");
+            var $b_undo = $("<i class=\"fa fa-undo bottom ui-undo\" title=\"Undo\"></i>");
+            var $b_startAgainOption = $("<i class=\"fa fa-trash-o ui-clear\" title=\"Start Again\"></i>");
             var $b_strokeContainer = $("<div class=\"slider\"></div>");
             var $b_strokeContainerTitle = $("<p>Select a brush size</p>");
             var $b_colourContainer = $("<div class=\"slider\"></div>");
             var $b_colourContainerTitle = $("<p>Select a colour</p>");
             var $b_canvas = $("<canvas></canvas>");
-            $b_menu.append($b_strokeOption, $b_colourOption, $b_undo, $b_startAgainOption);
+            $b_menu.append($b_strokeOption, $b_colourOption, $b_fill, $b_undo, $b_startAgainOption);
             $b_strokeContainer.append($b_strokeContainerTitle);
             $b_colourContainer.append($b_colourContainerTitle);
             var $simplePaintContainer = $b_simplePaint.appendTo(this.$container);
@@ -160,7 +164,7 @@ var simplepaint;
         DrawingManager.prototype.undo = function () {
             var _this = this;
             if (this.drawnShapes.length > 0) {
-                this.startAgain();
+                this.stage.clear();
                 this.drawnShapes.pop();
                 this.stage.removeAllChildren();
                 this.drawnShapes.forEach(function (shape) {
@@ -171,12 +175,42 @@ var simplepaint;
         };
         DrawingManager.prototype.startAgain = function () {
             this.stage.clear();
+            this.stage.removeAllChildren();
+            this.drawnShapes = [];
         };
         DrawingManager.prototype.getImage = function () {
             var bitmap = new createjs.Bitmap(this.canvas);
             bitmap.cache(0, 0, this.canvas.width, this.canvas.height, 1);
             var base64 = bitmap.getCacheDataURL();
             return base64;
+        };
+        DrawingManager.prototype.fillFirst = function () {
+            var firstShape = this.drawnShapes[0];
+            var instructions = firstShape.graphics.getInstructions();
+            var points = [];
+            instructions.forEach(function (instruction) {
+                points.push(new createjs.Point(instruction.x, instruction.y));
+            });
+            var firstPointNotZero;
+            for (var i = 0; i < points.length; i++) {
+                if (points[i].x > 0 && points[i].y > 0) {
+                    firstPointNotZero = points[i];
+                    break;
+                }
+            }
+            var poly = new createjs.Shape();
+            poly.x = firstShape.x;
+            poly.y = firstShape.y;
+            poly.graphics.beginFill(this.color);
+            poly.graphics.moveTo(firstPointNotZero.x, firstPointNotZero.y);
+            points.forEach(function (point) {
+                if (point.x > 0 && point.y > 0) {
+                    poly.graphics.lineTo(point.x, point.y);
+                }
+            });
+            this.drawnShapes.push(poly);
+            this.stage.addChild(poly);
+            this.stage.update();
         };
         DrawingManager.prototype.attachMouseDown = function (manager) {
             manager.stage.addEventListener("stagemousedown", function (event) {

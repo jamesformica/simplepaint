@@ -34,7 +34,7 @@
     color: white;
 }
 
-.simplepaint > .menu > i:last-child {
+.simplepaint > .menu > i.bottom {
     margin-top: auto;
 }
 
