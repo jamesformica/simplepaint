@@ -27,6 +27,9 @@ var simplepaint;
                 _this.$strokeContainer.removeClass("open");
                 _this.$colourContainer.toggleClass("open");
             });
+            this.$menu.find(".ui-undo").click(function () {
+                _this.drawingManager.undo();
+            });
             this.$menu.find(".ui-clear").click(function () {
                 _this.drawingManager.startAgain();
                 _this.$strokeContainer.removeClass("open");
@@ -92,13 +95,14 @@ var simplepaint;
             var $b_menu = $("<div class=\"menu\"></div>");
             var $b_strokeOption = $("<i class=\"fa fa-paint-brush ui-show-stroke\" title=\"Brush Stroke\"></i>");
             var $b_colourOption = $("<i class=\"fa fa-eyedropper ui-show-colour\" title=\"Brush Colour\"></i>");
+            var $b_undo = $("<i class=\"fa fa-undo ui-undo\" title=\"Undo\"></i>");
             var $b_startAgainOption = $("<i class=\"fa fa-bomb ui-clear\" title=\"Start Again\"></i>");
             var $b_strokeContainer = $("<div class=\"slider\"></div>");
             var $b_strokeContainerTitle = $("<p>Select a brush size</p>");
             var $b_colourContainer = $("<div class=\"slider\"></div>");
             var $b_colourContainerTitle = $("<p>Select a colour</p>");
             var $b_canvas = $("<canvas></canvas>");
-            $b_menu.append($b_strokeOption, $b_colourOption, $b_startAgainOption);
+            $b_menu.append($b_strokeOption, $b_colourOption, $b_undo, $b_startAgainOption);
             $b_strokeContainer.append($b_strokeContainerTitle);
             $b_colourContainer.append($b_colourContainerTitle);
             var $simplePaintContainer = $b_simplePaint.appendTo(this.$container);
@@ -136,16 +140,15 @@ var simplepaint;
             this.canvas = canvas;
             this.index = 0;
             this.stroke = 12;
+            this.drawnShapes = [];
             //check to see if we are running in a browser with touch support
             this.stage = new createjs.Stage(canvas);
             this.stage.autoClear = false;
             this.stage.enableDOMEvents(true);
             createjs.Touch.enable(this.stage);
             createjs.Ticker.setFPS(24);
-            this.drawingCanvas = new createjs.Shape();
             this.attachMouseDown(this);
             this.attachMouseUp(this);
-            this.stage.addChild(this.drawingCanvas);
             this.stage.update();
         }
         DrawingManager.prototype.setStroke = function (stroke) {
@@ -153,6 +156,18 @@ var simplepaint;
         };
         DrawingManager.prototype.setColour = function (colour) {
             this.color = colour;
+        };
+        DrawingManager.prototype.undo = function () {
+            var _this = this;
+            if (this.drawnShapes.length > 0) {
+                this.startAgain();
+                this.drawnShapes.pop();
+                this.stage.removeAllChildren();
+                this.drawnShapes.forEach(function (shape) {
+                    _this.stage.addChild(shape);
+                });
+                this.stage.update();
+            }
         };
         DrawingManager.prototype.startAgain = function () {
             this.stage.clear();
@@ -188,10 +203,12 @@ var simplepaint;
             }
             this.oldPoint = new createjs.Point(this.stage.mouseX, this.stage.mouseY);
             this.oldMidPoint = this.oldPoint.clone();
-            this.drawingCanvas.graphics.clear()
+            this.currentShape = new createjs.Shape();
+            this.currentShape.graphics.clear()
                 .beginStroke(this.color)
                 .beginFill(this.color)
                 .drawCircle(this.oldPoint.x, this.oldPoint.y, this.stroke / 2);
+            this.stage.addChild(this.currentShape);
             this.stage.update();
             this.attachMouseMove(this);
         };
@@ -200,7 +217,7 @@ var simplepaint;
                 return;
             }
             var newMidPoint = new createjs.Point(this.oldPoint.x + this.stage.mouseX >> 1, this.oldPoint.y + this.stage.mouseY >> 1);
-            this.drawingCanvas.graphics.clear()
+            this.currentShape.graphics
                 .setStrokeStyle(this.stroke, 'round', 'round')
                 .beginStroke(this.color)
                 .moveTo(newMidPoint.x, newMidPoint.y)
@@ -215,6 +232,8 @@ var simplepaint;
             if (!event.primary) {
                 return;
             }
+            this.drawnShapes.push(this.currentShape);
+            this.currentShape = undefined;
             this.removeMouseMove(this);
         };
         return DrawingManager;

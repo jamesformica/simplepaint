@@ -45,6 +45,10 @@ module simplepaint {
                 this.$colourContainer.toggleClass("open");
             });
 
+            this.$menu.find(".ui-undo").click(() => {
+                this.drawingManager.undo();
+            });
+
             this.$menu.find(".ui-clear").click(() => {
                 this.drawingManager.startAgain();
 
@@ -126,6 +130,7 @@ module simplepaint {
             let $b_menu = $("<div class=\"menu\"></div>");
             let $b_strokeOption = $("<i class=\"fa fa-paint-brush ui-show-stroke\" title=\"Brush Stroke\"></i>");
             let $b_colourOption = $("<i class=\"fa fa-eyedropper ui-show-colour\" title=\"Brush Colour\"></i>");
+            let $b_undo = $("<i class=\"fa fa-undo ui-undo\" title=\"Undo\"></i>")
             let $b_startAgainOption = $("<i class=\"fa fa-bomb ui-clear\" title=\"Start Again\"></i>");
 
             let $b_strokeContainer = $("<div class=\"slider\"></div>");
@@ -136,7 +141,7 @@ module simplepaint {
 
             let $b_canvas = $("<canvas></canvas>");
 
-            $b_menu.append($b_strokeOption, $b_colourOption, $b_startAgainOption);
+            $b_menu.append($b_strokeOption, $b_colourOption, $b_undo, $b_startAgainOption);
 
             $b_strokeContainer.append($b_strokeContainerTitle);
             $b_colourContainer.append($b_colourContainerTitle);

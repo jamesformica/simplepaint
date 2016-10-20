@@ -4,7 +4,6 @@ module simplepaint {
 
     export class DrawingManager {
 
-        private drawingCanvas: createjs.Shape;
         private stage: createjs.Stage;
         private oldPoint: createjs.Point;
         private oldMidPoint: createjs.Point;
@@ -12,11 +11,15 @@ module simplepaint {
         private stroke: number;
         private index: number;
 
+        private drawnShapes: createjs.Shape[];
+        private currentShape: createjs.Shape;
+
         private mouseMoveEvent: (event: any) => void;
 
         constructor(private canvas: HTMLCanvasElement) {
             this.index = 0;
             this.stroke = 12;
+            this.drawnShapes = [];
 
             //check to see if we are running in a browser with touch support
             this.stage = new createjs.Stage(canvas);
@@ -26,12 +29,9 @@ module simplepaint {
             createjs.Touch.enable(this.stage);
             createjs.Ticker.setFPS(24);
 
-            this.drawingCanvas = new createjs.Shape();
-
             this.attachMouseDown(this);
             this.attachMouseUp(this);
 
-            this.stage.addChild(this.drawingCanvas);
             this.stage.update();
         }
 
@@ -43,13 +43,28 @@ module simplepaint {
             this.color = colour;
         }
 
+        public undo(): void {
+            if (this.drawnShapes.length > 0) {
+                this.startAgain();
+
+                this.drawnShapes.pop();
+                this.stage.removeAllChildren();
+
+                this.drawnShapes.forEach((shape) => {
+                    this.stage.addChild(shape);
+                });
+
+                this.stage.update();
+            }
+        }
+
         public startAgain(): void {
             this.stage.clear();
         }
 
         public getImage(): string {
             let bitmap = new createjs.Bitmap(this.canvas);
-            bitmap.cache(0,0, this.canvas.width, this.canvas.height, 1);
+            bitmap.cache(0, 0, this.canvas.width, this.canvas.height, 1);
 
             let base64 = bitmap.getCacheDataURL();
             return base64;
@@ -85,11 +100,13 @@ module simplepaint {
             this.oldPoint = new createjs.Point(this.stage.mouseX, this.stage.mouseY);
             this.oldMidPoint = this.oldPoint.clone();
 
-            this.drawingCanvas.graphics.clear()
+            this.currentShape = new createjs.Shape();
+            this.currentShape.graphics.clear()
                 .beginStroke(this.color)
                 .beginFill(this.color)
                 .drawCircle(this.oldPoint.x, this.oldPoint.y, this.stroke / 2);
 
+            this.stage.addChild(this.currentShape);
             this.stage.update();
 
             this.attachMouseMove(this);
@@ -99,8 +116,8 @@ module simplepaint {
             if (!event.primary) { return; }
 
             let newMidPoint = new createjs.Point(this.oldPoint.x + this.stage.mouseX >> 1, this.oldPoint.y + this.stage.mouseY >> 1);
-           
-            this.drawingCanvas.graphics.clear()
+
+            this.currentShape.graphics
                 .setStrokeStyle(this.stroke, 'round', 'round')
                 .beginStroke(this.color)
                 .moveTo(newMidPoint.x, newMidPoint.y)
@@ -117,6 +134,8 @@ module simplepaint {
         private handleMouseUp(event) {
             if (!event.primary) { return; }
 
+            this.drawnShapes.push(this.currentShape);
+            this.currentShape = undefined;
             this.removeMouseMove(this);
         }
     }
