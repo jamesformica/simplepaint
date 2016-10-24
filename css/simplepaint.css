@@ -25,7 +25,7 @@
     cursor: pointer;
 }
 
-.simplepaint > .menu > i:hover {
+.simplepaint > .menu > i:hover, i.active {
     background: #B5DDE2;
 }
 

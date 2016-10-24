@@ -9,5 +9,7 @@ declare namespace simplepaint {
         constructor(canvas: HTMLCanvasElement);
 
         getImage(): string;
+
+        clearCanvas(): void;
     }
 }

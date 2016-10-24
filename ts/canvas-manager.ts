@@ -34,6 +34,10 @@ module simplepaint {
             return this.drawingManager.getImage();
         }
 
+        public clearCanvas(): void {
+            this.drawingManager.startAgain();
+        }
+
         private attachEvents(): void {
             this.$menu.find(".ui-show-stroke").click(() => {
                 this.$colourContainer.removeClass("open");
@@ -45,8 +49,10 @@ module simplepaint {
                 this.$colourContainer.toggleClass("open");
             });
 
-            this.$menu.find(".ui-fill").click(() => {
-                this.drawingManager.fillFirst();
+            let $fill = this.$menu.find(".ui-fill");
+            $fill.click(() => {
+                let active = this.drawingManager.toggleFillMode();
+                $fill.toggleClass("active", active);
             });
 
             this.$menu.find(".ui-undo").click(() => {

@@ -27,8 +27,10 @@ var simplepaint;
                 _this.$strokeContainer.removeClass("open");
                 _this.$colourContainer.toggleClass("open");
             });
-            this.$menu.find(".ui-fill").click(function () {
-                _this.drawingManager.fillFirst();
+            var $fill = this.$menu.find(".ui-fill");
+            $fill.click(function () {
+                var active = _this.drawingManager.toggleFillMode();
+                $fill.toggleClass("active", active);
             });
             this.$menu.find(".ui-undo").click(function () {
                 _this.drawingManager.undo();
@@ -136,6 +138,51 @@ var simplepaint;
     }());
     simplepaint.CanvasManager = CanvasManager;
 })(simplepaint || (simplepaint = {}));
+var simplepaint;
+(function (simplepaint) {
+    var helper;
+    (function (helper) {
+        "use strict";
+        function getValidInstructions(shape) {
+            return shape.graphics.getInstructions().filter(function (instruction) {
+                var x = instruction.x;
+                var y = instruction.y;
+                return x !== 0 && x !== undefined && y !== 0 && y !== undefined;
+            });
+        }
+        helper.getValidInstructions = getValidInstructions;
+        function IsPointWithinShapeSquare(shape, p) {
+            var mostNorth = 0;
+            var mostEast = 0;
+            var mostSouth = 0;
+            var mostWest = 0;
+            simplepaint.helper.getValidInstructions(shape).forEach(function (instruction) {
+                var x = instruction.x;
+                var y = instruction.y;
+                if (mostWest === 0 || x < mostWest)
+                    mostWest = x;
+                if (mostEast === 0 || x > mostEast)
+                    mostEast = x;
+                if (mostNorth === 0 || y < mostNorth)
+                    mostNorth = y;
+                if (mostSouth === 0 || y > mostSouth)
+                    mostSouth = y;
+            });
+            return mostWest < p.x && mostEast > p.x && mostNorth < p.y && mostSouth > p.y;
+        }
+        helper.IsPointWithinShapeSquare = IsPointWithinShapeSquare;
+        function polyContains(points, p) {
+            var result = false;
+            for (var i = 0; i < points.length - 1; i++) {
+                if ((((points[i + 1].y <= p.y) && (p.y < points[i].y)) || ((points[i].y <= p.y) && (p.y < points[i + 1].y))) && (p.x < (points[i].x - points[i + 1].x) * (p.y - points[i + 1].y) / (points[i].y - points[i + 1].y) + points[i + 1].x)) {
+                    result = !result;
+                }
+            }
+            return result;
+        }
+        helper.polyContains = polyContains;
+    })(helper = simplepaint.helper || (simplepaint.helper = {}));
+})(simplepaint || (simplepaint = {}));
 /// <reference path="../types/easeljs.d.ts" />
 var simplepaint;
 (function (simplepaint) {
@@ -145,6 +192,7 @@ var simplepaint;
             this.index = 0;
             this.stroke = 12;
             this.drawnShapes = [];
+            this.isFillMode = false;
             //check to see if we are running in a browser with touch support
             this.stage = new createjs.Stage(canvas);
             this.stage.autoClear = false;
@@ -160,6 +208,10 @@ var simplepaint;
         };
         DrawingManager.prototype.setColour = function (colour) {
             this.color = colour;
+        };
+        DrawingManager.prototype.toggleFillMode = function () {
+            this.isFillMode = !this.isFillMode;
+            return this.isFillMode;
         };
         DrawingManager.prototype.undo = function () {
             var _this = this;
@@ -184,37 +236,14 @@ var simplepaint;
             var base64 = bitmap.getCacheDataURL();
             return base64;
         };
-        DrawingManager.prototype.fillFirst = function () {
-            var firstShape = this.drawnShapes[0];
-            var instructions = firstShape.graphics.getInstructions();
-            var points = [];
-            instructions.forEach(function (instruction) {
-                points.push(new createjs.Point(instruction.x, instruction.y));
-            });
-            var firstPointNotZero;
-            for (var i = 0; i < points.length; i++) {
-                if (points[i].x > 0 && points[i].y > 0) {
-                    firstPointNotZero = points[i];
-                    break;
-                }
-            }
-            var poly = new createjs.Shape();
-            poly.x = firstShape.x;
-            poly.y = firstShape.y;
-            poly.graphics.beginFill(this.color);
-            poly.graphics.moveTo(firstPointNotZero.x, firstPointNotZero.y);
-            points.forEach(function (point) {
-                if (point.x > 0 && point.y > 0) {
-                    poly.graphics.lineTo(point.x, point.y);
-                }
-            });
-            this.drawnShapes.push(poly);
-            this.stage.addChild(poly);
-            this.stage.update();
-        };
         DrawingManager.prototype.attachMouseDown = function (manager) {
             manager.stage.addEventListener("stagemousedown", function (event) {
-                manager.handleMouseDown(event);
+                if (manager.isFillMode) {
+                    manager.locateShape();
+                }
+                else {
+                    manager.handleMouseDown(event);
+                }
             });
         };
         DrawingManager.prototype.attachMouseUp = function (manager) {
@@ -266,9 +295,41 @@ var simplepaint;
             if (!event.primary) {
                 return;
             }
-            this.drawnShapes.push(this.currentShape);
+            if (this.currentShape !== undefined) {
+                this.drawnShapes.push(this.currentShape);
+            }
             this.currentShape = undefined;
             this.removeMouseMove(this);
+        };
+        DrawingManager.prototype.locateShape = function () {
+            var potentialShapes = [];
+            var mousePoint = new createjs.Point(this.stage.mouseX, this.stage.mouseY);
+            for (var i = 0; i < this.drawnShapes.length; i++) {
+                var shape = this.drawnShapes[i];
+                if (simplepaint.helper.IsPointWithinShapeSquare(shape, mousePoint)) {
+                    potentialShapes.push(shape);
+                }
+            }
+            for (var i = 0; i < potentialShapes.length; i++) {
+                var shape = potentialShapes[i];
+                var points = simplepaint.helper.getValidInstructions(shape);
+                if (simplepaint.helper.polyContains(points, mousePoint)) {
+                    this.fillShape(shape, points);
+                }
+            }
+        };
+        DrawingManager.prototype.fillShape = function (shape, instructions) {
+            var poly = new createjs.Shape();
+            poly.x = shape.x;
+            poly.y = shape.y;
+            poly.graphics.beginFill(this.color);
+            poly.graphics.moveTo(instructions[0].x, instructions[0].y);
+            for (var i = 0; i < instructions.length; i++) {
+                poly.graphics.lineTo(instructions[i].x, instructions[i].y);
+            }
+            this.drawnShapes.push(poly);
+            this.stage.addChild(poly);
+            this.stage.update();
         };
         return DrawingManager;
     }());

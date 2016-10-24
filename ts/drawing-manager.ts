@@ -11,6 +11,7 @@ module simplepaint {
         private stroke: number;
         private index: number;
 
+        private isFillMode: boolean;
         private drawnShapes: createjs.Shape[];
         private currentShape: createjs.Shape;
 
@@ -20,6 +21,7 @@ module simplepaint {
             this.index = 0;
             this.stroke = 12;
             this.drawnShapes = [];
+            this.isFillMode = false;
 
             //check to see if we are running in a browser with touch support
             this.stage = new createjs.Stage(canvas);
@@ -41,6 +43,11 @@ module simplepaint {
 
         public setColour(colour: string): void {
             this.color = colour;
+        }
+
+        public toggleFillMode(): boolean {
+            this.isFillMode = !this.isFillMode;
+            return this.isFillMode;
         }
 
         public undo(): void {
@@ -72,44 +79,13 @@ module simplepaint {
             return base64;
         }
 
-        public fillFirst(): void {
-            let firstShape = this.drawnShapes[0];
-            let instructions: any[] = firstShape.graphics.getInstructions();
-
-            let points: createjs.Point[] = [];
-
-            instructions.forEach((instruction) => {
-                points.push(new createjs.Point(instruction.x, instruction.y))
-            });
-
-            let firstPointNotZero: createjs.Point;
-            for (let i = 0; i < points.length; i++) {
-                if (points[i].x > 0 && points[i].y > 0) {
-                    firstPointNotZero = points[i];
-                    break;
-                }
-            }
-
-            let poly = new createjs.Shape();
-            poly.x = firstShape.x;
-            poly.y = firstShape.y;
-            poly.graphics.beginFill(this.color);
-            poly.graphics.moveTo(firstPointNotZero.x, firstPointNotZero.y);
-
-            points.forEach((point) => {
-                if (point.x > 0 && point.y > 0) {
-                    poly.graphics.lineTo(point.x, point.y);
-                }
-            });
-
-            this.drawnShapes.push(poly);
-            this.stage.addChild(poly);
-            this.stage.update();
-        }
-
         private attachMouseDown(manager: DrawingManager): void {
             manager.stage.addEventListener("stagemousedown", (event: any) => {
-                manager.handleMouseDown(event);
+                if (manager.isFillMode) {
+                    manager.locateShape();
+                } else {
+                    manager.handleMouseDown(event);
+                }
             });
         }
 
@@ -171,9 +147,50 @@ module simplepaint {
         private handleMouseUp(event) {
             if (!event.primary) { return; }
 
-            this.drawnShapes.push(this.currentShape);
+            if (this.currentShape !== undefined) {
+                this.drawnShapes.push(this.currentShape);
+            }
+
             this.currentShape = undefined;
             this.removeMouseMove(this);
+        }
+
+        private locateShape(): void {
+            let potentialShapes: createjs.Shape[] = [];
+            let mousePoint = new createjs.Point(this.stage.mouseX, this.stage.mouseY);
+
+            for (let i = 0; i < this.drawnShapes.length; i++) {
+                let shape = this.drawnShapes[i];
+
+                if (simplepaint.helper.IsPointWithinShapeSquare(shape, mousePoint)) {
+                    potentialShapes.push(shape);
+                }
+            }
+
+            for (let i = 0; i < potentialShapes.length; i++) {
+                let shape = potentialShapes[i];
+                let points = simplepaint.helper.getValidInstructions(shape);
+
+                if (simplepaint.helper.polyContains(points, mousePoint)) {
+                    this.fillShape(shape, points);
+                }
+            }
+        }
+
+        private fillShape(shape: createjs.Shape, instructions: createjs.Point[]): void {
+            let poly = new createjs.Shape();
+            poly.x = shape.x;
+            poly.y = shape.y;
+            poly.graphics.beginFill(this.color);
+            poly.graphics.moveTo(instructions[0].x, instructions[0].y);
+
+            for (let i = 0; i < instructions.length; i++) {
+                poly.graphics.lineTo(instructions[i].x, instructions[i].y);
+            }
+
+            this.drawnShapes.push(poly);
+            this.stage.addChild(poly);
+            this.stage.update();
         }
     }
 }
