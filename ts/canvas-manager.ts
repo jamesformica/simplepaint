@@ -54,7 +54,6 @@ module simplepaint {
                 this.$colourContainer.toggleClass("open");
             });
 
-            
             $fill.click(() => {
                 let active = this.drawingManager.toggleFillMode();
                 $fill.toggleClass("active", active);
