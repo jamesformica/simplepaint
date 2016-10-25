@@ -22,15 +22,17 @@ var simplepaint;
         };
         CanvasManager.prototype.attachEvents = function () {
             var _this = this;
+            var $fill = this.$menu.find(".ui-fill");
             this.$menu.find(".ui-show-stroke").click(function () {
                 _this.$colourContainer.removeClass("open");
                 _this.$strokeContainer.toggleClass("open");
+                $fill.removeClass("active");
+                _this.drawingManager.toggleFillMode(false);
             });
             this.$menu.find(".ui-show-colour").click(function () {
                 _this.$strokeContainer.removeClass("open");
                 _this.$colourContainer.toggleClass("open");
             });
-            var $fill = this.$menu.find(".ui-fill");
             $fill.click(function () {
                 var active = _this.drawingManager.toggleFillMode();
                 $fill.toggleClass("active", active);
@@ -98,10 +100,10 @@ var simplepaint;
         CanvasManager.prototype.buildSimplePaint = function () {
             var $b_simplePaint = $("<div class=\"simplepaint\"></div>");
             var $b_menu = $("<div class=\"menu\"></div>");
-            var $b_strokeOption = $("<i class=\"fa fa-circle-o ui-show-stroke\" title=\"Stroke\"></i>");
-            var $b_colourOption = $("<i class=\"fa fa-paint-brush ui-show-colour\" title=\"Colour\"></i>");
-            var $b_fill = $("<i class=\"fa fa-diamond ui-fill\" title=\"Fill\"></i>");
-            var $b_startAgainOption = $("<i class=\"fa fa-trash-o bottom ui-clear\" title=\"Start Again\"></i>");
+            var $b_strokeOption = $("<i class=\"icon-pencil ui-show-stroke\" title=\"Stroke\"></i>");
+            var $b_colourOption = $("<i class=\"icon-palette ui-show-colour\" title=\"Colour\"></i>");
+            var $b_fill = $("<i class=\"icon-bucket ui-fill\" title=\"Fill\"></i>");
+            var $b_startAgainOption = $("<i class=\"icon-bin bottom ui-clear\" title=\"Start Again\"></i>");
             var $b_strokeContainer = $("<div class=\"slider\"></div>");
             var $b_strokeContainerTitle = $("<p>Select a brush size</p>");
             var $b_colourContainer = $("<div class=\"slider\"></div>");
@@ -124,7 +126,7 @@ var simplepaint;
         CanvasManager.prototype.buildStrokeOptions = function () {
             for (var i = 0; i < this.brushSizes.length; i++) {
                 var $option = $("<i style='font-size: " + this.brushSizes[i] + "px'></i>")
-                    .addClass("fa fa-circle")
+                    .addClass("icon-pencil")
                     .addClass("option ui-stroke-option")
                     .data("stroke", this.brushSizes[i]);
                 this.$strokeContainer.append($option);
@@ -271,8 +273,13 @@ var simplepaint;
         DrawingManager.prototype.setColour = function (colour) {
             this.color = colour;
         };
-        DrawingManager.prototype.toggleFillMode = function () {
-            this.isFillMode = !this.isFillMode;
+        DrawingManager.prototype.toggleFillMode = function (isFillMode) {
+            if (isFillMode !== undefined) {
+                this.isFillMode = isFillMode;
+            }
+            else {
+                this.isFillMode = !this.isFillMode;
+            }
             return this.isFillMode;
         };
         DrawingManager.prototype.startAgain = function () {

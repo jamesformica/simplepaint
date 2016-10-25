@@ -46,8 +46,13 @@ module simplepaint {
             this.color = colour;
         }
 
-        public toggleFillMode(): boolean {
-            this.isFillMode = !this.isFillMode;
+        public toggleFillMode(isFillMode?: boolean): boolean {
+            if (isFillMode !== undefined) {
+                this.isFillMode = isFillMode;
+            } else {
+                this.isFillMode = !this.isFillMode;
+            }
+
             return this.isFillMode;
         }
 

@@ -39,9 +39,14 @@ module simplepaint {
         }
 
         private attachEvents(): void {
+            let $fill = this.$menu.find(".ui-fill");
+
             this.$menu.find(".ui-show-stroke").click(() => {
                 this.$colourContainer.removeClass("open");
                 this.$strokeContainer.toggleClass("open");
+
+                $fill.removeClass("active");
+                this.drawingManager.toggleFillMode(false);
             });
 
             this.$menu.find(".ui-show-colour").click(() => {
@@ -49,7 +54,7 @@ module simplepaint {
                 this.$colourContainer.toggleClass("open");
             });
 
-            let $fill = this.$menu.find(".ui-fill");
+            
             $fill.click(() => {
                 let active = this.drawingManager.toggleFillMode();
                 $fill.toggleClass("active", active);
@@ -134,10 +139,10 @@ module simplepaint {
             let $b_simplePaint = $("<div class=\"simplepaint\"></div>");
 
             let $b_menu = $("<div class=\"menu\"></div>");
-            let $b_strokeOption = $("<i class=\"fa fa-circle-o ui-show-stroke\" title=\"Stroke\"></i>");
-            let $b_colourOption = $("<i class=\"fa fa-paint-brush ui-show-colour\" title=\"Colour\"></i>");
-            let $b_fill = $("<i class=\"fa fa-diamond ui-fill\" title=\"Fill\"></i>");
-            let $b_startAgainOption = $("<i class=\"fa fa-trash-o bottom ui-clear\" title=\"Start Again\"></i>");
+            let $b_strokeOption = $("<i class=\"icon-pencil ui-show-stroke\" title=\"Stroke\"></i>");
+            let $b_colourOption = $("<i class=\"icon-palette ui-show-colour\" title=\"Colour\"></i>");
+            let $b_fill = $("<i class=\"icon-bucket ui-fill\" title=\"Fill\"></i>");
+            let $b_startAgainOption = $("<i class=\"icon-bin bottom ui-clear\" title=\"Start Again\"></i>");
 
             let $b_strokeContainer = $("<div class=\"slider\"></div>");
             let $b_strokeContainerTitle = $("<p>Select a brush size</p>");
@@ -171,7 +176,7 @@ module simplepaint {
         private buildStrokeOptions(): void {
             for (let i = 0; i < this.brushSizes.length; i++) {
                 let $option = $("<i style='font-size: " + this.brushSizes[i] + "px'></i>")
-                    .addClass("fa fa-circle")
+                    .addClass("icon-pencil")
                     .addClass("option ui-stroke-option")
                     .data("stroke", this.brushSizes[i]);
 
