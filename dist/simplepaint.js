@@ -17,6 +17,9 @@ var simplepaint;
         CanvasManager.prototype.getImage = function () {
             return this.drawingManager.getImage();
         };
+        CanvasManager.prototype.clearCanvas = function () {
+            this.drawingManager.startAgain();
+        };
         CanvasManager.prototype.attachEvents = function () {
             var _this = this;
             this.$menu.find(".ui-show-stroke").click(function () {
@@ -31,9 +34,6 @@ var simplepaint;
             $fill.click(function () {
                 var active = _this.drawingManager.toggleFillMode();
                 $fill.toggleClass("active", active);
-            });
-            this.$menu.find(".ui-undo").click(function () {
-                _this.drawingManager.undo();
             });
             this.$menu.find(".ui-clear").click(function () {
                 _this.drawingManager.startAgain();
@@ -101,14 +101,12 @@ var simplepaint;
             var $b_strokeOption = $("<i class=\"fa fa-circle-o ui-show-stroke\" title=\"Stroke\"></i>");
             var $b_colourOption = $("<i class=\"fa fa-paint-brush ui-show-colour\" title=\"Colour\"></i>");
             var $b_fill = $("<i class=\"fa fa-diamond ui-fill\" title=\"Fill\"></i>");
-            var $b_undo = $("<i class=\"fa fa-undo bottom ui-undo\" title=\"Undo\"></i>");
-            var $b_startAgainOption = $("<i class=\"fa fa-trash-o ui-clear\" title=\"Start Again\"></i>");
+            var $b_startAgainOption = $("<i class=\"fa fa-trash-o bottom ui-clear\" title=\"Start Again\"></i>");
             var $b_strokeContainer = $("<div class=\"slider\"></div>");
             var $b_strokeContainerTitle = $("<p>Select a brush size</p>");
             var $b_colourContainer = $("<div class=\"slider\"></div>");
             var $b_colourContainerTitle = $("<p>Select a colour</p>");
             var $b_canvas = $("<canvas></canvas>");
-            $b_menu.append($b_strokeOption, $b_colourOption, $b_fill, $b_undo, $b_startAgainOption);
             $b_strokeContainer.append($b_strokeContainerTitle);
             $b_colourContainer.append($b_colourContainerTitle);
             var $simplePaintContainer = $b_simplePaint.appendTo(this.$container);
@@ -116,6 +114,12 @@ var simplepaint;
             this.$strokeContainer = $b_strokeContainer.appendTo($simplePaintContainer);
             this.$colourContainer = $b_colourContainer.appendTo($simplePaintContainer);
             this.$canvas = $b_canvas.appendTo($simplePaintContainer);
+            var menuItems = [$b_strokeOption, $b_colourOption];
+            if (this.canFill()) {
+                menuItems.push($b_fill);
+            }
+            menuItems.push($b_startAgainOption);
+            $b_menu.append(menuItems);
         };
         CanvasManager.prototype.buildStrokeOptions = function () {
             for (var i = 0; i < this.brushSizes.length; i++) {
@@ -134,6 +138,18 @@ var simplepaint;
                 this.$colourContainer.append($option);
             }
         };
+        CanvasManager.prototype.canFill = function () {
+            var canvas = this.$canvas.get(0);
+            var context = canvas.getContext("2d");
+            // Test for cross origin security error (SECURITY_ERR: DOM Exception 18)
+            try {
+                var outlineLayerData = context.getImageData(0, 0, canvas.width, canvas.height);
+            }
+            catch (ex) {
+                return false;
+            }
+            return true;
+        };
         return CanvasManager;
     }());
     simplepaint.CanvasManager = CanvasManager;
@@ -143,44 +159,89 @@ var simplepaint;
     var helper;
     (function (helper) {
         "use strict";
-        function getValidInstructions(shape) {
-            return shape.graphics.getInstructions().filter(function (instruction) {
-                var x = instruction.x;
-                var y = instruction.y;
-                return x !== 0 && x !== undefined && y !== 0 && y !== undefined;
-            });
-        }
-        helper.getValidInstructions = getValidInstructions;
-        function IsPointWithinShapeSquare(shape, p) {
-            var mostNorth = 0;
-            var mostEast = 0;
-            var mostSouth = 0;
-            var mostWest = 0;
-            simplepaint.helper.getValidInstructions(shape).forEach(function (instruction) {
-                var x = instruction.x;
-                var y = instruction.y;
-                if (mostWest === 0 || x < mostWest)
-                    mostWest = x;
-                if (mostEast === 0 || x > mostEast)
-                    mostEast = x;
-                if (mostNorth === 0 || y < mostNorth)
-                    mostNorth = y;
-                if (mostSouth === 0 || y > mostSouth)
-                    mostSouth = y;
-            });
-            return mostWest < p.x && mostEast > p.x && mostNorth < p.y && mostSouth > p.y;
-        }
-        helper.IsPointWithinShapeSquare = IsPointWithinShapeSquare;
-        function polyContains(points, p) {
-            var result = false;
-            for (var i = 0; i < points.length - 1; i++) {
-                if ((((points[i + 1].y <= p.y) && (p.y < points[i].y)) || ((points[i].y <= p.y) && (p.y < points[i + 1].y))) && (p.x < (points[i].x - points[i + 1].x) * (p.y - points[i + 1].y) / (points[i].y - points[i + 1].y) + points[i + 1].x)) {
-                    result = !result;
+        function floodFill(stage, canvas, colour) {
+            var pixelStack = [[stage.mouseX, stage.mouseY]];
+            var rgbFill = getRgbColour(colour);
+            var context = canvas.getContext("2d");
+            var colourLayerData = context.getImageData(0, 0, canvas.width, canvas.height);
+            var clickPixel = (stage.mouseY * canvas.width + stage.mouseX) * 4;
+            var clickR = colourLayerData.data[clickPixel];
+            var clickG = colourLayerData.data[clickPixel + 1];
+            var clickB = colourLayerData.data[clickPixel + 2];
+            while (pixelStack.length) {
+                var newPos = void 0;
+                var x = void 0;
+                var y = void 0;
+                var pixelPos = void 0;
+                var reachLeft = void 0;
+                var reachRight = void 0;
+                newPos = pixelStack.pop();
+                x = newPos[0];
+                y = newPos[1];
+                pixelPos = (y * canvas.width + x) * 4;
+                while (y-- >= 0 && matchStartColor(pixelPos, colourLayerData, clickR, clickG, clickB)) {
+                    pixelPos -= canvas.width * 4;
+                }
+                pixelPos += canvas.width * 4;
+                ++y;
+                reachLeft = false;
+                reachRight = false;
+                while (y++ < canvas.height - 1 && matchStartColor(pixelPos, colourLayerData, clickR, clickG, clickB)) {
+                    colorPixel(pixelPos, colourLayerData, rgbFill);
+                    if (x > 0) {
+                        if (matchStartColor(pixelPos - 4, colourLayerData, clickR, clickG, clickB)) {
+                            if (!reachLeft) {
+                                pixelStack.push([x - 1, y]);
+                                reachLeft = true;
+                            }
+                        }
+                        else if (reachLeft) {
+                            reachLeft = false;
+                        }
+                    }
+                    if (x < canvas.width - 1) {
+                        if (matchStartColor(pixelPos + 4, colourLayerData, clickR, clickG, clickB)) {
+                            if (!reachRight) {
+                                pixelStack.push([x + 1, y]);
+                                reachRight = true;
+                            }
+                        }
+                        else if (reachRight) {
+                            reachRight = false;
+                        }
+                    }
+                    pixelPos += canvas.width * 4;
                 }
             }
-            return result;
+            context.putImageData(colourLayerData, 0, 0);
         }
-        helper.polyContains = polyContains;
+        helper.floodFill = floodFill;
+        function matchStartColor(pixelPos, colorLayer, origR, origG, origB) {
+            var r = colorLayer.data[pixelPos];
+            var g = colorLayer.data[pixelPos + 1];
+            var b = colorLayer.data[pixelPos + 2];
+            return (r == origR && g == origG && b == origB);
+        }
+        function colorPixel(pixelPos, colorLayer, rgbFill) {
+            colorLayer.data[pixelPos] = rgbFill[0];
+            colorLayer.data[pixelPos + 1] = rgbFill[1];
+            colorLayer.data[pixelPos + 2] = rgbFill[2];
+            colorLayer.data[pixelPos + 3] = 255;
+        }
+        function getRgbColour(colour) {
+            var fakeDiv = document.createElement("div");
+            fakeDiv.style.display = "none";
+            fakeDiv.style.color = colour;
+            document.body.appendChild(fakeDiv);
+            var rgbString = window.getComputedStyle(fakeDiv).color;
+            var rgbStringArray = rgbString.substring(4, rgbString.length - 1)
+                .replace(/ /g, '')
+                .split(',');
+            var rgbNumberArray = rgbStringArray.map(function (a) {
+                return Number(a);
+            });
+            return rgbNumberArray;
+        }
     })(helper = simplepaint.helper || (simplepaint.helper = {}));
 })(simplepaint || (simplepaint = {}));
 /// <reference path="../types/easeljs.d.ts" />
@@ -191,12 +252,13 @@ var simplepaint;
             this.canvas = canvas;
             this.index = 0;
             this.stroke = 12;
-            this.drawnShapes = [];
             this.isFillMode = false;
             //check to see if we are running in a browser with touch support
             this.stage = new createjs.Stage(canvas);
             this.stage.autoClear = false;
             this.stage.enableDOMEvents(true);
+            this.shapeLayer = new createjs.Shape();
+            this.stage.addChild(this.shapeLayer);
             createjs.Touch.enable(this.stage);
             createjs.Ticker.setFPS(24);
             this.attachMouseDown(this);
@@ -213,22 +275,8 @@ var simplepaint;
             this.isFillMode = !this.isFillMode;
             return this.isFillMode;
         };
-        DrawingManager.prototype.undo = function () {
-            var _this = this;
-            if (this.drawnShapes.length > 0) {
-                this.stage.clear();
-                this.drawnShapes.pop();
-                this.stage.removeAllChildren();
-                this.drawnShapes.forEach(function (shape) {
-                    _this.stage.addChild(shape);
-                });
-                this.stage.update();
-            }
-        };
         DrawingManager.prototype.startAgain = function () {
             this.stage.clear();
-            this.stage.removeAllChildren();
-            this.drawnShapes = [];
         };
         DrawingManager.prototype.getImage = function () {
             var bitmap = new createjs.Bitmap(this.canvas);
@@ -239,7 +287,7 @@ var simplepaint;
         DrawingManager.prototype.attachMouseDown = function (manager) {
             manager.stage.addEventListener("stagemousedown", function (event) {
                 if (manager.isFillMode) {
-                    manager.locateShape();
+                    manager.floodFill();
                 }
                 else {
                     manager.handleMouseDown(event);
@@ -266,12 +314,10 @@ var simplepaint;
             }
             this.oldPoint = new createjs.Point(this.stage.mouseX, this.stage.mouseY);
             this.oldMidPoint = this.oldPoint.clone();
-            this.currentShape = new createjs.Shape();
-            this.currentShape.graphics.clear()
+            this.shapeLayer.graphics.clear()
                 .beginStroke(this.color)
                 .beginFill(this.color)
                 .drawCircle(this.oldPoint.x, this.oldPoint.y, this.stroke / 2);
-            this.stage.addChild(this.currentShape);
             this.stage.update();
             this.attachMouseMove(this);
         };
@@ -280,7 +326,7 @@ var simplepaint;
                 return;
             }
             var newMidPoint = new createjs.Point(this.oldPoint.x + this.stage.mouseX >> 1, this.oldPoint.y + this.stage.mouseY >> 1);
-            this.currentShape.graphics
+            this.shapeLayer.graphics.clear()
                 .setStrokeStyle(this.stroke, 'round', 'round')
                 .beginStroke(this.color)
                 .moveTo(newMidPoint.x, newMidPoint.y)
@@ -295,41 +341,10 @@ var simplepaint;
             if (!event.primary) {
                 return;
             }
-            if (this.currentShape !== undefined) {
-                this.drawnShapes.push(this.currentShape);
-            }
-            this.currentShape = undefined;
             this.removeMouseMove(this);
         };
-        DrawingManager.prototype.locateShape = function () {
-            var potentialShapes = [];
-            var mousePoint = new createjs.Point(this.stage.mouseX, this.stage.mouseY);
-            for (var i = 0; i < this.drawnShapes.length; i++) {
-                var shape = this.drawnShapes[i];
-                if (simplepaint.helper.IsPointWithinShapeSquare(shape, mousePoint)) {
-                    potentialShapes.push(shape);
-                }
-            }
-            for (var i = 0; i < potentialShapes.length; i++) {
-                var shape = potentialShapes[i];
-                var points = simplepaint.helper.getValidInstructions(shape);
-                if (simplepaint.helper.polyContains(points, mousePoint)) {
-                    this.fillShape(shape, points);
-                }
-            }
-        };
-        DrawingManager.prototype.fillShape = function (shape, instructions) {
-            var poly = new createjs.Shape();
-            poly.x = shape.x;
-            poly.y = shape.y;
-            poly.graphics.beginFill(this.color);
-            poly.graphics.moveTo(instructions[0].x, instructions[0].y);
-            for (var i = 0; i < instructions.length; i++) {
-                poly.graphics.lineTo(instructions[i].x, instructions[i].y);
-            }
-            this.drawnShapes.push(poly);
-            this.stage.addChild(poly);
-            this.stage.update();
+        DrawingManager.prototype.floodFill = function () {
+            simplepaint.helper.floodFill(this.stage, this.canvas, this.color);
         };
         return DrawingManager;
     }());

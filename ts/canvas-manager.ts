@@ -55,10 +55,6 @@ module simplepaint {
                 $fill.toggleClass("active", active);
             });
 
-            this.$menu.find(".ui-undo").click(() => {
-                this.drawingManager.undo();
-            });
-
             this.$menu.find(".ui-clear").click(() => {
                 this.drawingManager.startAgain();
 
@@ -74,7 +70,7 @@ module simplepaint {
 
             this.$colourContainer.on("click", ".ui-colour-option", (e) => {
                 let $colour = $(e.currentTarget);
-                
+
                 this.drawingManager.setColour($colour.data("colour"));
                 this.$colourContainer.removeClass("open");
 
@@ -141,8 +137,7 @@ module simplepaint {
             let $b_strokeOption = $("<i class=\"fa fa-circle-o ui-show-stroke\" title=\"Stroke\"></i>");
             let $b_colourOption = $("<i class=\"fa fa-paint-brush ui-show-colour\" title=\"Colour\"></i>");
             let $b_fill = $("<i class=\"fa fa-diamond ui-fill\" title=\"Fill\"></i>");
-            let $b_undo = $("<i class=\"fa fa-undo bottom ui-undo\" title=\"Undo\"></i>")
-            let $b_startAgainOption = $("<i class=\"fa fa-trash-o ui-clear\" title=\"Start Again\"></i>");
+            let $b_startAgainOption = $("<i class=\"fa fa-trash-o bottom ui-clear\" title=\"Start Again\"></i>");
 
             let $b_strokeContainer = $("<div class=\"slider\"></div>");
             let $b_strokeContainerTitle = $("<p>Select a brush size</p>");
@@ -151,8 +146,6 @@ module simplepaint {
             let $b_colourContainerTitle = $("<p>Select a colour</p>");
 
             let $b_canvas = $("<canvas></canvas>");
-
-            $b_menu.append($b_strokeOption, $b_colourOption, $b_fill, $b_undo, $b_startAgainOption);
 
             $b_strokeContainer.append($b_strokeContainerTitle);
             $b_colourContainer.append($b_colourContainerTitle);
@@ -163,10 +156,20 @@ module simplepaint {
             this.$strokeContainer = $b_strokeContainer.appendTo($simplePaintContainer);
             this.$colourContainer = $b_colourContainer.appendTo($simplePaintContainer);
             this.$canvas = $b_canvas.appendTo($simplePaintContainer);
+
+            let menuItems: JQuery[] = [$b_strokeOption, $b_colourOption];
+
+            if (this.canFill()) {
+                menuItems.push($b_fill);
+            }
+
+            menuItems.push($b_startAgainOption);
+
+            $b_menu.append(menuItems);
         }
 
         private buildStrokeOptions(): void {
-            for (let i = 0; i < this.brushSizes.length; i ++) {
+            for (let i = 0; i < this.brushSizes.length; i++) {
                 let $option = $("<i style='font-size: " + this.brushSizes[i] + "px'></i>")
                     .addClass("fa fa-circle")
                     .addClass("option ui-stroke-option")
@@ -184,6 +187,20 @@ module simplepaint {
 
                 this.$colourContainer.append($option);
             }
+        }
+
+        private canFill(): boolean {
+            let canvas = <HTMLCanvasElement>this.$canvas.get(0);
+            let context = canvas.getContext("2d");
+
+            // Test for cross origin security error (SECURITY_ERR: DOM Exception 18)
+            try {
+                let outlineLayerData = context.getImageData(0, 0, canvas.width, canvas.height);
+            } catch (ex) {
+                return false;
+            }
+
+            return true;
         }
     }
 }
