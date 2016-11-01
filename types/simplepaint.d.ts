@@ -1,3 +1,5 @@
+/// <reference path="jquery.d.ts" />
+
 interface ICanvasManagerOptions {
     height?: number,
     colours?: string[],
@@ -6,7 +8,7 @@ interface ICanvasManagerOptions {
 
 declare namespace simplepaint {
     class CanvasManager {
-        constructor(canvas: HTMLCanvasElement);
+        constructor($container: JQuery, options?: ICanvasManagerOptions);
 
         getImage(): string;
 
