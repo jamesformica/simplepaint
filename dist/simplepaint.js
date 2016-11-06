@@ -163,17 +163,18 @@ var simplepaint;
         "use strict";
         function floodFill(stage, canvas, colour) {
             var pixelStack = [[stage.mouseX, stage.mouseY]];
-            var rgbFill = getRgbColour(colour);
             var context = canvas.getContext("2d");
             var colourLayerData = context.getImageData(0, 0, canvas.width, canvas.height);
             var clickPixel = (stage.mouseY * canvas.width + stage.mouseX) * 4;
-            var clickR = colourLayerData.data[clickPixel];
-            var clickG = colourLayerData.data[clickPixel + 1];
-            var clickB = colourLayerData.data[clickPixel + 2];
+            var rgbaClickColour = getClickRgbaColour(colourLayerData, clickPixel);
+            var rgbaFillColour = getFillRgbaColour(colour);
+            if (isClickTheSameAsFillColour(rgbaClickColour, rgbaFillColour)) {
+                return;
+            }
             while (pixelStack.length) {
-                var newPos = void 0;
                 var x = void 0;
                 var y = void 0;
+                var newPos = void 0;
                 var pixelPos = void 0;
                 var reachLeft = void 0;
                 var reachRight = void 0;
@@ -181,17 +182,17 @@ var simplepaint;
                 x = newPos[0];
                 y = newPos[1];
                 pixelPos = (y * canvas.width + x) * 4;
-                while (y-- >= 0 && matchStartColor(pixelPos, colourLayerData, clickR, clickG, clickB)) {
+                while (y-- >= 0 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour)) {
                     pixelPos -= canvas.width * 4;
                 }
                 pixelPos += canvas.width * 4;
                 ++y;
                 reachLeft = false;
                 reachRight = false;
-                while (y++ < canvas.height - 1 && matchStartColor(pixelPos, colourLayerData, clickR, clickG, clickB)) {
-                    colorPixel(pixelPos, colourLayerData, rgbFill);
+                while (y++ < canvas.height - 1 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour)) {
+                    colorPixel(pixelPos, colourLayerData, rgbaFillColour);
                     if (x > 0) {
-                        if (matchStartColor(pixelPos - 4, colourLayerData, clickR, clickG, clickB)) {
+                        if (doesPixelMatchClickColour(pixelPos - 4, colourLayerData, rgbaClickColour)) {
                             if (!reachLeft) {
                                 pixelStack.push([x - 1, y]);
                                 reachLeft = true;
@@ -202,7 +203,7 @@ var simplepaint;
                         }
                     }
                     if (x < canvas.width - 1) {
-                        if (matchStartColor(pixelPos + 4, colourLayerData, clickR, clickG, clickB)) {
+                        if (doesPixelMatchClickColour(pixelPos + 4, colourLayerData, rgbaClickColour)) {
                             if (!reachRight) {
                                 pixelStack.push([x + 1, y]);
                                 reachRight = true;
@@ -218,31 +219,58 @@ var simplepaint;
             context.putImageData(colourLayerData, 0, 0);
         }
         helper.floodFill = floodFill;
-        function matchStartColor(pixelPos, colorLayer, origR, origG, origB) {
+        function getClickRgbaColour(colourLayerData, clickPixel) {
+            return {
+                r: colourLayerData.data[clickPixel],
+                g: colourLayerData.data[clickPixel + 1],
+                b: colourLayerData.data[clickPixel + 2],
+                a: colourLayerData.data[clickPixel + 3]
+            };
+        }
+        function isClickTheSameAsFillColour(clickColour, fillColour) {
+            return clickColour.r === fillColour.r && clickColour.g === fillColour.g && clickColour.b === fillColour.b && clickColour.a === fillColour.a;
+        }
+        function doesPixelMatchClickColour(pixelPos, colorLayer, clickColour) {
             var r = colorLayer.data[pixelPos];
             var g = colorLayer.data[pixelPos + 1];
             var b = colorLayer.data[pixelPos + 2];
-            return (r == origR && g == origG && b == origB);
+            var a = colorLayer.data[pixelPos + 3];
+            return (r === clickColour.r && g === clickColour.g && b === clickColour.b && a === clickColour.a);
         }
-        function colorPixel(pixelPos, colorLayer, rgbFill) {
-            colorLayer.data[pixelPos] = rgbFill[0];
-            colorLayer.data[pixelPos + 1] = rgbFill[1];
-            colorLayer.data[pixelPos + 2] = rgbFill[2];
-            colorLayer.data[pixelPos + 3] = 255;
+        function colorPixel(pixelPos, colorLayer, fillColour) {
+            colorLayer.data[pixelPos] = fillColour.r;
+            colorLayer.data[pixelPos + 1] = fillColour.g;
+            colorLayer.data[pixelPos + 2] = fillColour.b;
+            colorLayer.data[pixelPos + 3] = fillColour.a;
         }
-        function getRgbColour(colour) {
+        function getFillRgbaColour(colour) {
             var fakeDiv = document.createElement("div");
             fakeDiv.style.display = "none";
             fakeDiv.style.color = colour;
-            document.body.appendChild(fakeDiv);
+            var newChild = document.body.appendChild(fakeDiv);
             var rgbString = window.getComputedStyle(fakeDiv).color;
+            document.body.removeChild(newChild);
             var rgbStringArray = rgbString.substring(4, rgbString.length - 1)
                 .replace(/ /g, '')
                 .split(',');
             var rgbNumberArray = rgbStringArray.map(function (a) {
                 return Number(a);
             });
-            return rgbNumberArray;
+            var fillRgba = {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 255
+            };
+            if (rgbNumberArray.length >= 3) {
+                fillRgba.r = rgbNumberArray[0];
+                fillRgba.g = rgbNumberArray[1];
+                fillRgba.b = rgbNumberArray[2];
+            }
+            if (rgbNumberArray.length === 4) {
+                fillRgba.a = rgbNumberArray[3];
+            }
+            return fillRgba;
         }
     })(helper = simplepaint.helper || (simplepaint.helper = {}));
 })(simplepaint || (simplepaint = {}));
