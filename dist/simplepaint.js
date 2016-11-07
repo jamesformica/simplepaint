@@ -168,7 +168,7 @@ var simplepaint;
             var clickPixel = (stage.mouseY * canvas.width + stage.mouseX) * 4;
             var rgbaClickColour = getClickRgbaColour(colourLayerData, clickPixel);
             var rgbaFillColour = getFillRgbaColour(colour);
-            if (isClickTheSameAsFillColour(rgbaClickColour, rgbaFillColour)) {
+            if (areColoursTheSame(rgbaClickColour, rgbaFillColour)) {
                 return;
             }
             while (pixelStack.length) {
@@ -182,17 +182,17 @@ var simplepaint;
                 x = newPos[0];
                 y = newPos[1];
                 pixelPos = (y * canvas.width + x) * 4;
-                while (y-- >= 0 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour)) {
+                while (y-- >= 0 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                     pixelPos -= canvas.width * 4;
                 }
                 pixelPos += canvas.width * 4;
                 ++y;
                 reachLeft = false;
                 reachRight = false;
-                while (y++ < canvas.height - 1 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour)) {
+                while (y++ < canvas.height - 1 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                     colorPixel(pixelPos, colourLayerData, rgbaFillColour);
                     if (x > 0) {
-                        if (doesPixelMatchClickColour(pixelPos - 4, colourLayerData, rgbaClickColour)) {
+                        if (doesPixelMatchClickColour(pixelPos - 4, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                             if (!reachLeft) {
                                 pixelStack.push([x - 1, y]);
                                 reachLeft = true;
@@ -203,7 +203,7 @@ var simplepaint;
                         }
                     }
                     if (x < canvas.width - 1) {
-                        if (doesPixelMatchClickColour(pixelPos + 4, colourLayerData, rgbaClickColour)) {
+                        if (doesPixelMatchClickColour(pixelPos + 4, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                             if (!reachRight) {
                                 pixelStack.push([x + 1, y]);
                                 reachRight = true;
@@ -227,15 +227,26 @@ var simplepaint;
                 a: colourLayerData.data[clickPixel + 3]
             };
         }
-        function isClickTheSameAsFillColour(clickColour, fillColour) {
-            return clickColour.r === fillColour.r && clickColour.g === fillColour.g && clickColour.b === fillColour.b && clickColour.a === fillColour.a;
+        function areColoursTheSame(colour1, colour2) {
+            return colour1.r === colour2.r && colour1.g === colour2.g && colour1.b === colour2.b && colour1.a === colour2.a;
         }
-        function doesPixelMatchClickColour(pixelPos, colorLayer, clickColour) {
-            var r = colorLayer.data[pixelPos];
-            var g = colorLayer.data[pixelPos + 1];
-            var b = colorLayer.data[pixelPos + 2];
-            var a = colorLayer.data[pixelPos + 3];
-            return (r === clickColour.r && g === clickColour.g && b === clickColour.b && a === clickColour.a);
+        function doesPixelMatchClickColour(pixelPos, colorLayer, clickColour, fillColour) {
+            var currentRgba = {
+                r: colorLayer.data[pixelPos],
+                g: colorLayer.data[pixelPos + 1],
+                b: colorLayer.data[pixelPos + 2],
+                a: colorLayer.data[pixelPos + 3]
+            };
+            var clickMatches = areColoursTheSame(currentRgba, clickColour);
+            if (!clickMatches && !areColoursTheSame(currentRgba, fillColour)) {
+                var isRClose = fillColour.r - 16 <= currentRgba.r;
+                var isGClose = fillColour.g - 16 <= currentRgba.g;
+                var isBClose = fillColour.b - 16 <= currentRgba.b;
+                if (isRClose && isGClose && isBClose) {
+                    return true;
+                }
+            }
+            return clickMatches;
         }
         function colorPixel(pixelPos, colorLayer, fillColour) {
             colorLayer.data[pixelPos] = fillColour.r;

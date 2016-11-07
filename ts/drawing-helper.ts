@@ -18,7 +18,7 @@ module simplepaint.helper {
         let rgbaClickColour = getClickRgbaColour(colourLayerData, clickPixel);
         let rgbaFillColour = getFillRgbaColour(colour);
 
-        if (isClickTheSameAsFillColour(rgbaClickColour, rgbaFillColour)) {
+        if (areColoursTheSame(rgbaClickColour, rgbaFillColour)) {
             return;
         }
 
@@ -36,7 +36,7 @@ module simplepaint.helper {
 
             pixelPos = (y * canvas.width + x) * 4;
 
-            while (y-- >= 0 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour)) {
+            while (y-- >= 0 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                 pixelPos -= canvas.width * 4;
             }
 
@@ -45,11 +45,11 @@ module simplepaint.helper {
             reachLeft = false;
             reachRight = false;
 
-            while (y++ < canvas.height - 1 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour)) {
+            while (y++ < canvas.height - 1 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                 colorPixel(pixelPos, colourLayerData, rgbaFillColour);
 
                 if (x > 0) {
-                    if (doesPixelMatchClickColour(pixelPos - 4, colourLayerData, rgbaClickColour)) {
+                    if (doesPixelMatchClickColour(pixelPos - 4, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                         if (!reachLeft) {
                             pixelStack.push([x - 1, y]);
                             reachLeft = true;
@@ -61,7 +61,7 @@ module simplepaint.helper {
                 }
 
                 if (x < canvas.width - 1) {
-                    if (doesPixelMatchClickColour(pixelPos + 4, colourLayerData, rgbaClickColour)) {
+                    if (doesPixelMatchClickColour(pixelPos + 4, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                         if (!reachRight) {
                             pixelStack.push([x + 1, y]);
                             reachRight = true;
@@ -88,20 +88,34 @@ module simplepaint.helper {
         }
     }
 
-    function isClickTheSameAsFillColour(clickColour: RGBA, fillColour: RGBA): boolean {
-        return clickColour.r === fillColour.r && clickColour.g === fillColour.g && clickColour.b === fillColour.b && clickColour.a === fillColour.a;
+    function areColoursTheSame(colour1: RGBA, colour2: RGBA): boolean {
+        return colour1.r === colour2.r && colour1.g === colour2.g && colour1.b === colour2.b && colour1.a === colour2.a;
     }
 
-    function doesPixelMatchClickColour(pixelPos, colorLayer: ImageData, clickColour: RGBA) {
-        let r = colorLayer.data[pixelPos];
-        let g = colorLayer.data[pixelPos + 1];
-        let b = colorLayer.data[pixelPos + 2];
-        let a = colorLayer.data[pixelPos + 3];
+    function doesPixelMatchClickColour(pixelPos: number, colorLayer: ImageData, clickColour: RGBA, fillColour: RGBA): boolean {
+        let currentRgba: RGBA = {
+            r: colorLayer.data[pixelPos],
+            g: colorLayer.data[pixelPos + 1],
+            b: colorLayer.data[pixelPos + 2],
+            a: colorLayer.data[pixelPos + 3]
+        };
 
-        return (r === clickColour.r && g === clickColour.g && b === clickColour.b && a === clickColour.a);
+        let clickMatches = areColoursTheSame(currentRgba, clickColour);
+
+        if (!clickMatches && !areColoursTheSame(currentRgba, fillColour)) {
+            let isRClose = fillColour.r - 16 <= currentRgba.r;
+            let isGClose = fillColour.g - 16 <= currentRgba.g;
+            let isBClose = fillColour.b - 16 <= currentRgba.b;
+
+            if (isRClose && isGClose && isBClose) {
+                return true;
+            }
+        }
+
+        return clickMatches;
     }
 
-    function colorPixel(pixelPos, colorLayer: ImageData, fillColour: RGBA) {
+    function colorPixel(pixelPos: number, colorLayer: ImageData, fillColour: RGBA): void {
         colorLayer.data[pixelPos] = fillColour.r;
         colorLayer.data[pixelPos + 1] = fillColour.g;
         colorLayer.data[pixelPos + 2] = fillColour.b;
