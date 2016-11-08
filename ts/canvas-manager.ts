@@ -176,15 +176,15 @@ module simplepaint {
             let $b_menu = $("<div class=\"menu\"></div>");
             let $b_strokeOption = $("<i class=\"icon-brush\" title=\"Stroke\"></i>");
             let $b_colourOption = $("<i class=\"colour\" title=\"Colour\"></i>");
-            let $b_sizeOption = $("<i class=\"icon-spinner6\" title=\"Colour\"></i>");
+            let $b_sizeOption = $("<i class=\"icon-radio-unchecked\" title=\"Colour\"></i>");
             let $b_fill = $("<i class=\"icon-bucket\" title=\"Fill\"></i>");
             let $b_startAgainOption = $("<i class=\"icon-bin bottom\" title=\"Start Again\"></i>");
 
             let $b_strokeContainer = $("<div class=\"slider\"></div>");
-            let $b_strokeContainerTitle = $("<p>Select a brush size</p>");
+            let $b_strokeContainerTitle = $("<p><i class=\"icon-brush\"></i>Select a brush size</p>");
 
             let $b_colourContainer = $("<div class=\"slider\"></div>");
-            let $b_colourContainerTitle = $("<p>Select a colour</p>");
+            let $b_colourContainerTitle = $("<p><i class=\"icon-palette\"></i> Select a colour</p>");
 
             let $b_canvas = $("<canvas></canvas>");
 
@@ -222,7 +222,7 @@ module simplepaint {
 
         private buildStrokeOptions(): void {
             for (let i = 0; i < this.brushSizes.length; i++) {
-                let $option = $("<i class='icon-spinner6' style='font-size: " + this.brushSizes[i] + "px'></i>");
+                let $option = $("<i class='icon-radio-unchecked' style='font-size: " + this.brushSizes[i] + "px'></i>");
 
                 let $optionWrapper = $("<div></div>")
                     .addClass("option-wrapper ui-stroke-option")

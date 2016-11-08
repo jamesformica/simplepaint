@@ -133,13 +133,13 @@ var simplepaint;
             var $b_menu = $("<div class=\"menu\"></div>");
             var $b_strokeOption = $("<i class=\"icon-brush\" title=\"Stroke\"></i>");
             var $b_colourOption = $("<i class=\"colour\" title=\"Colour\"></i>");
-            var $b_sizeOption = $("<i class=\"icon-spinner6\" title=\"Colour\"></i>");
+            var $b_sizeOption = $("<i class=\"icon-radio-unchecked\" title=\"Colour\"></i>");
             var $b_fill = $("<i class=\"icon-bucket\" title=\"Fill\"></i>");
             var $b_startAgainOption = $("<i class=\"icon-bin bottom\" title=\"Start Again\"></i>");
             var $b_strokeContainer = $("<div class=\"slider\"></div>");
-            var $b_strokeContainerTitle = $("<p>Select a brush size</p>");
+            var $b_strokeContainerTitle = $("<p><i class=\"icon-brush\"></i>Select a brush size</p>");
             var $b_colourContainer = $("<div class=\"slider\"></div>");
-            var $b_colourContainerTitle = $("<p>Select a colour</p>");
+            var $b_colourContainerTitle = $("<p><i class=\"icon-palette\"></i> Select a colour</p>");
             var $b_canvas = $("<canvas></canvas>");
             $b_strokeContainer.append($b_strokeContainerTitle);
             $b_colourContainer.append($b_colourContainerTitle);
@@ -166,7 +166,7 @@ var simplepaint;
         };
         CanvasManager.prototype.buildStrokeOptions = function () {
             for (var i = 0; i < this.brushSizes.length; i++) {
-                var $option = $("<i class='icon-spinner6' style='font-size: " + this.brushSizes[i] + "px'></i>");
+                var $option = $("<i class='icon-radio-unchecked' style='font-size: " + this.brushSizes[i] + "px'></i>");
                 var $optionWrapper = $("<div></div>")
                     .addClass("option-wrapper ui-stroke-option")
                     .data("stroke", this.brushSizes[i])
