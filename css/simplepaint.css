@@ -12,25 +12,32 @@
     color: black;
     background: white;
     z-index: 1000;
-
     display: flex;
     flex-direction: column;
 }
 
-.simplepaint > .menu > i {
+.simplepaint > .menu > .menu-item-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
     font-size: 20px;
     width: 50px;
     height: 50px;
-    line-height: 50px;
-    text-align: center;
-    cursor: pointer;
+    box-sizing: border-box;
 }
 
-.simplepaint > .menu > i.active {
-    background: #B5DDE2;
+.simplepaint > .menu > .menu-item-container > i {
+    padding: 5px;
+    border-radius: 4px
 }
 
-.simplepaint > .menu > i.bottom {
+.simplepaint > .menu > .menu-item-container.selected > i {
+    background: #f2f2f2;
+    border: 1px solid #d3d3d3;
+}
+
+.simplepaint > .menu > .menu-item-container.bottom {
     margin-top: auto;
 }
 
@@ -45,7 +52,7 @@
     left: 0;
     width: 220px;
     height: 100%;
-    background: rgba(181,221,226, 0.8);
+    background: #f2f2f2;
     overflow: auto;
 
     display: flex;
