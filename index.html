@@ -14,7 +14,7 @@
 
 <body onload="go()" style="margin: 0; background: #f2f2f2;">
 
-	<div class="ui-simplepaint" style="width: 700px; margin: 0 auto;"></div>
+	<div class="ui-simplepaint" style="width: 100%;"></div>
 
 	<button type="button" class="ui-get-image">GetImage</button>
 	<img class="ui-image" alt="future image">
@@ -23,7 +23,8 @@
         function go() {
             let $image = $(".ui-image");
             let $canvasContainer = $(".ui-simplepaint");
-            let canvasManager = new simplepaint.CanvasManager($canvasContainer);
+            let height = $(document).height();
+            let canvasManager = new simplepaint.CanvasManager($canvasContainer, {height: height});
 
             $(".ui-get-image").click(function() {
                 let base64 = canvasManager.getImage();

@@ -18,7 +18,7 @@ module simplepaint {
 
         constructor(private canvas: HTMLCanvasElement) {
             this.index = 0;
-            this.stroke = 12;
+            this.stroke = 0;
             this.isFillMode = false;
 
             //check to see if we are running in a browser with touch support

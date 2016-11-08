@@ -28,6 +28,7 @@ module simplepaint {
             this.buildColourOptions();
 
             this.drawingManager = new simplepaint.DrawingManager(<HTMLCanvasElement>this.$canvas.get(0));
+            this.setMiddleStroke();
             this.setRandomColour();
         }
 
@@ -40,19 +41,18 @@ module simplepaint {
         }
 
         private attachEvents(): void {
-            let $stroke = this.$menu.find(".ui-show-stroke");
+            let $brush = this.$menu.find(".ui-brush");
             let $fill = this.$menu.find(".ui-fill");
+            let $stroke = this.$menu.find(".ui-show-stroke");
+
+            $brush.click(() => {
+                this.drawingManager.toggleFillMode(false);
+                this.selectTool($brush);
+            });
 
             $stroke.click(() => {
                 this.$colourContainer.removeClass("open");
-
-                if ($stroke.hasClass("selected")) {
-                    // only show stroke if selected
-                    this.$strokeContainer.toggleClass("open");
-                }
-
-                this.drawingManager.toggleFillMode(false);
-                this.selectTool($stroke);
+                this.$strokeContainer.toggleClass("open");
             });
 
             this.$menu.find(".ui-show-colour").click(() => {
@@ -61,47 +61,43 @@ module simplepaint {
             });
 
             $fill.click(() => {
-                this.$strokeContainer.removeClass("open");
-                this.$colourContainer.removeClass("open");
-
                 let active = this.drawingManager.toggleFillMode();
                 if (active) {
                     this.selectTool($fill);
                 } else {
-                    this.selectTool($stroke);
+                    this.selectTool($brush);
                 }
             });
 
             this.$menu.find(".ui-clear").click(() => {
                 this.drawingManager.startAgain();
-
-                this.$strokeContainer.removeClass("open");
-                this.$colourContainer.removeClass("open");
+                this.selectTool($brush);
             });
 
             this.$strokeContainer.on("click", ".ui-stroke-option", (e) => {
-                let $stroke = $(e.currentTarget);
-                this.drawingManager.setStroke($stroke.data("stroke"));
-                this.$strokeContainer.removeClass("open");
+                this.selectStroke($(e.currentTarget));
             });
 
             this.$colourContainer.on("click", ".ui-colour-option", (e) => {
                 let $colour = $(e.currentTarget);
 
-                this.setColour($colour.data("colour"));
+                this.selectColour($colour.data("colour"));
                 this.$colourContainer.removeClass("open");
 
                 this.$colourContainer.find(".selected").removeClass("selected");
                 $colour.addClass("selected");
             });
 
-            this.$canvas.click(() => {
+            this.$canvas.mousedown(() => {
                 this.$strokeContainer.removeClass("open");
                 this.$colourContainer.removeClass("open");
             });
         }
 
         private selectTool($tool: JQuery): void {
+            this.$strokeContainer.removeClass("open");
+            this.$colourContainer.removeClass("open");
+
             if (!$tool.hasClass("selected")) {
                 let $currentSelected = $tool.parent().find(".ui-menu-item-container.selected");
                 $currentSelected.removeClass("selected");
@@ -109,7 +105,15 @@ module simplepaint {
             }
         }
 
-        private setColour(colour: string): void {
+        private selectStroke($stroke: JQuery): void {
+            this.drawingManager.setStroke($stroke.data("stroke"));
+            this.$strokeContainer.removeClass("open");
+
+            this.$strokeContainer.find(".selected").removeClass("selected");
+            $stroke.addClass("selected");
+        }
+
+        private selectColour(colour: string): void {
             this.drawingManager.setColour(colour);
 
             this.$colourMenuItem.find("i").css("background-color", colour);
@@ -146,7 +150,7 @@ module simplepaint {
                 chosenColour = this.colours[Math.floor(Math.random() * this.colours.length)];
             } while (chosenColour.toLowerCase() === "#ffffff" || chosenColour.toLowerCase() === "white");
 
-            this.setColour(chosenColour);
+            this.selectColour(chosenColour);
 
             let $allColours = this.$colourContainer.find(".ui-colour-option");
             let $chosenColour = $allColours.filter((index, element) => {
@@ -156,17 +160,23 @@ module simplepaint {
             $chosenColour.addClass("selected");
         }
 
+        private setMiddleStroke(): void {
+            let $allStrokes = this.$strokeContainer.find(".ui-stroke-option");
+            let $centerStroke = $($allStrokes[Math.floor($allStrokes.length / 2)])
+            this.selectStroke($centerStroke);
+        }
+
         private isNotNullOrUndefined(value: any): boolean {
             return value !== undefined && value !== null;
         }
 
         private buildSimplePaint(): void {
-
             let $b_simplePaint = $("<div class=\"simplepaint\"></div>");
 
             let $b_menu = $("<div class=\"menu\"></div>");
-            let $b_strokeOption = $("<i class=\"icon-pencil\" title=\"Stroke\"></i>");
-            let $b_colourOption = $("<i class=\"icon-palette\" title=\"Colour\"></i>");
+            let $b_strokeOption = $("<i class=\"icon-brush\" title=\"Stroke\"></i>");
+            let $b_colourOption = $("<i class=\"colour\" title=\"Colour\"></i>");
+            let $b_sizeOption = $("<i class=\"icon-spinner6\" title=\"Colour\"></i>");
             let $b_fill = $("<i class=\"icon-bucket\" title=\"Fill\"></i>");
             let $b_startAgainOption = $("<i class=\"icon-bin bottom\" title=\"Start Again\"></i>");
 
@@ -188,12 +198,13 @@ module simplepaint {
             this.$colourContainer = $b_colourContainer.appendTo($simplePaintContainer);
             this.$canvas = $b_canvas.appendTo($simplePaintContainer);
 
-            let menuItems: JQuery[] = [this.wrapMenuItem($b_strokeOption, " ui-show-stroke selected")];
+            let menuItems: JQuery[] = [this.wrapMenuItem($b_strokeOption, "ui-brush selected")];
 
             if (this.canFill()) {
                 menuItems.push(this.wrapMenuItem($b_fill, "ui-fill"));
             }
 
+            menuItems.push(this.wrapMenuItem($b_sizeOption, "ui-show-stroke"))
             menuItems.push(this.wrapMenuItem($b_colourOption, "ui-show-colour"));
             menuItems.push(this.wrapMenuItem($b_startAgainOption, "ui-clear bottom"));
 
@@ -211,19 +222,21 @@ module simplepaint {
 
         private buildStrokeOptions(): void {
             for (let i = 0; i < this.brushSizes.length; i++) {
-                let $option = $("<i style='font-size: " + this.brushSizes[i] + "px'></i>")
-                    .addClass("icon-pencil")
-                    .addClass("option ui-stroke-option")
-                    .data("stroke", this.brushSizes[i]);
+                let $option = $("<i class='icon-spinner6' style='font-size: " + this.brushSizes[i] + "px'></i>");
 
-                this.$strokeContainer.append($option);
+                let $optionWrapper = $("<div></div>")
+                    .addClass("option-wrapper ui-stroke-option")
+                    .data("stroke", this.brushSizes[i])
+                    .append($option);
+
+                this.$strokeContainer.append($optionWrapper);
             }
         }
 
         private buildColourOptions(): void {
             for (let i = 0; i < this.colours.length; i++) {
                 let $option = $("<span style='background: " + this.colours[i] + "'></i>")
-                    .addClass("option ui-colour-option")
+                    .addClass("option-wrapper ui-colour-option")
                     .data("colour", this.colours[i]);
 
                 this.$colourContainer.append($option);
