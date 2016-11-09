@@ -176,9 +176,9 @@ module simplepaint {
             let $b_simplePaint = $("<div class=\"simplepaint\"></div>");
 
             let $b_menu = $("<div class=\"menu\"></div>");
-            let $b_strokeOption = $("<i class=\"icon-brush\" title=\"Stroke\"></i>");
+            let $b_brushOption = $("<i class=\"icon-brush\" title=\"Brush\"></i>");
             let $b_colourOption = $("<i class=\"colour\" title=\"Colour\"></i>");
-            let $b_sizeOption = $("<i class=\"icon-radio-unchecked\" title=\"Colour\"></i>");
+            let $b_sizeOption = $("<i class=\"icon-radio-unchecked\" title=\"Stroke\"></i>");
             let $b_fill = $("<i class=\"icon-bucket\" title=\"Fill\"></i>");
             let $b_startAgainOption = $("<i class=\"icon-bin bottom\" title=\"Start Again\"></i>");
 
@@ -200,7 +200,7 @@ module simplepaint {
             this.$colourContainer = $b_colourContainer.appendTo($simplePaintContainer);
             this.$canvas = $b_canvas.appendTo($simplePaintContainer);
 
-            let menuItems: JQuery[] = [this.wrapMenuItem($b_strokeOption, "ui-brush selected")];
+            let menuItems: JQuery[] = [this.wrapMenuItem($b_brushOption, "ui-brush selected")];
 
             if (this.canFill()) {
                 menuItems.push(this.wrapMenuItem($b_fill, "ui-fill"));

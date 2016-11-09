@@ -132,9 +132,9 @@ var simplepaint;
         CanvasManager.prototype.buildSimplePaint = function () {
             var $b_simplePaint = $("<div class=\"simplepaint\"></div>");
             var $b_menu = $("<div class=\"menu\"></div>");
-            var $b_strokeOption = $("<i class=\"icon-brush\" title=\"Stroke\"></i>");
+            var $b_brushOption = $("<i class=\"icon-brush\" title=\"Brush\"></i>");
             var $b_colourOption = $("<i class=\"colour\" title=\"Colour\"></i>");
-            var $b_sizeOption = $("<i class=\"icon-radio-unchecked\" title=\"Colour\"></i>");
+            var $b_sizeOption = $("<i class=\"icon-radio-unchecked\" title=\"Stroke\"></i>");
             var $b_fill = $("<i class=\"icon-bucket\" title=\"Fill\"></i>");
             var $b_startAgainOption = $("<i class=\"icon-bin bottom\" title=\"Start Again\"></i>");
             var $b_strokeContainer = $("<div class=\"slider\"></div>");
@@ -149,7 +149,7 @@ var simplepaint;
             this.$strokeContainer = $b_strokeContainer.appendTo($simplePaintContainer);
             this.$colourContainer = $b_colourContainer.appendTo($simplePaintContainer);
             this.$canvas = $b_canvas.appendTo($simplePaintContainer);
-            var menuItems = [this.wrapMenuItem($b_strokeOption, "ui-brush selected")];
+            var menuItems = [this.wrapMenuItem($b_brushOption, "ui-brush selected")];
             if (this.canFill()) {
                 menuItems.push(this.wrapMenuItem($b_fill, "ui-fill"));
             }
