@@ -207,7 +207,7 @@ var simplepaint;
             var pixelStack = [[stage.mouseX, stage.mouseY]];
             var context = canvas.getContext("2d");
             var colourLayerData = context.getImageData(0, 0, canvas.width, canvas.height);
-            var clickPixel = (stage.mouseY * canvas.width + stage.mouseX) * 4;
+            var clickPixel = (Math.floor(stage.mouseY) * Math.floor(canvas.width) + Math.floor(stage.mouseX)) * 4;
             var rgbaClickColour = getClickRgbaColour(colourLayerData, clickPixel);
             var rgbaFillColour = getFillRgbaColour(colour);
             if (areColoursTheSame(rgbaClickColour, rgbaFillColour)) {
