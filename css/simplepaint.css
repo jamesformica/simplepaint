@@ -43,6 +43,11 @@
     border: 1px solid #d3d3d3;
 }
 
+.simplepaint > .menu > .menu-item-container:not(.selected):hover > i {
+    background: #fcfcfc;
+    border: 1px solid #f2f2f2;
+}
+
 .simplepaint > .menu > .menu-item-container.bottom {
     margin-top: auto;
 }
