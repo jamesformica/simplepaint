@@ -221,9 +221,9 @@ var simplepaint;
                 var reachLeft = void 0;
                 var reachRight = void 0;
                 newPos = pixelStack.pop();
-                x = newPos[0];
-                y = newPos[1];
-                pixelPos = (y * canvas.width + x) * 4;
+                x = Math.floor(newPos[0]);
+                y = Math.floor(newPos[1]);
+                pixelPos = (y * Math.floor(canvas.width) + x) * 4;
                 while (y-- >= 0 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                     pixelPos -= canvas.width * 4;
                 }
