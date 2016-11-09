@@ -13,7 +13,7 @@ module simplepaint.helper {
         let context = canvas.getContext("2d");
         let colourLayerData = context.getImageData(0, 0, canvas.width, canvas.height);
 
-        let clickPixel = (stage.mouseY * canvas.width + stage.mouseX) * 4;
+        let clickPixel = (Math.floor(stage.mouseY) * Math.floor(canvas.width) + Math.floor(stage.mouseX)) * 4;
 
         let rgbaClickColour = getClickRgbaColour(colourLayerData, clickPixel);
         let rgbaFillColour = getFillRgbaColour(colour);
