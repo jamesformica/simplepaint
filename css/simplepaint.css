@@ -88,6 +88,7 @@
 }
 
 .simplepaint > .slider .option-wrapper {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -97,6 +98,13 @@
     cursor: pointer;
     min-width: 32px;
     min-height: 32px;
+}
+
+.simplepaint > .slider .option-wrapper .size {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 8px;
 }
 
 .simplepaint > .slider .option-wrapper.selected {

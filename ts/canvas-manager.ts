@@ -61,12 +61,8 @@ module simplepaint {
             });
 
             $fill.click(() => {
-                let active = this.drawingManager.toggleFillMode();
-                if (active) {
-                    this.selectTool($fill);
-                } else {
-                    this.selectTool($brush);
-                }
+                this.drawingManager.toggleFillMode(true);
+                this.selectTool($fill);
             });
 
             this.$menu.find(".ui-clear").click(() => {
@@ -125,13 +121,22 @@ module simplepaint {
             if (optionsSet && this.isNotNullOrUndefined(this.options.colours)) {
                 this.colours = this.options.colours;
             } else {
-                this.colours = ["#2ecc71", "#1abc9c", "#3498db", "#f1c40f", "#e67e22", "#e74c3c", "#9b59b6", "#bdc3c7", "#7f8c8d", "#34495e", "red", "orange", "blue", "lime", "aqua", "magenta", "#000000", "#ffffff"];
+                let reds = ["#B71C1C", "#D32F2F", "#F44336", "#E57373"];
+                let purples = ["#4A148C", "#7B1FA2", "#9C27B0", "#BA68C8"];
+                let blues = ["#0D47A1", "#1976D2", "#2196F3", "#64B5F6"];
+                let teals = ["#004D40", "#00796B", "#009688", "#4DB6AC"];
+                let greens = ["#1B5E20", "#388E3C", "#4CAF50", "#81C784"];
+                let yellows = ["#F57F17", "#FBC02D", "#FFEB3B", "#FFF176"];
+                let oranges = ["#E65100", "#F57C00", "#FF9800", "#FFB74D"];
+                let shades = ["#000000", "#616161", "#9E9E9E", "#ffffff"];
+
+                this.colours = reds.concat(purples).concat(blues).concat(teals).concat(greens).concat(yellows).concat(oranges).concat(shades);
             }
 
             if (optionsSet && this.isNotNullOrUndefined(this.options.brushSizes)) {
                 this.brushSizes = this.options.brushSizes;
             } else {
-                this.brushSizes = [4, 8, 12, 16, 20, 24, 28, 32];
+                this.brushSizes = [4, 8, 12, 16, 20, 24, 28, 32, 36, 42, 48, 54, 60];
             }
 
             if (optionsSet && this.isNotNullOrUndefined(this.options.height)) {
@@ -146,18 +151,15 @@ module simplepaint {
 
         private setRandomColour(): void {
             let chosenColour: string;
+            let $chosenColour: JQuery;
+            let $allColours = this.$colourContainer.find(".ui-colour-option");
+
             do {
-                chosenColour = this.colours[Math.floor(Math.random() * this.colours.length)];
+                $chosenColour = $($allColours[Math.floor(Math.random() * this.colours.length)]);
+                chosenColour = $chosenColour.data("colour");
             } while (chosenColour.toLowerCase() === "#ffffff" || chosenColour.toLowerCase() === "white");
 
-            this.selectColour(chosenColour);
-
-            let $allColours = this.$colourContainer.find(".ui-colour-option");
-            let $chosenColour = $allColours.filter((index, element) => {
-                return $(element).data("colour") === chosenColour;
-            });
-
-            $chosenColour.addClass("selected");
+            $chosenColour.click();
         }
 
         private setMiddleStroke(): void {
@@ -223,6 +225,9 @@ module simplepaint {
         private buildStrokeOptions(): void {
             for (let i = 0; i < this.brushSizes.length; i++) {
                 let $option = $("<i class='icon-radio-unchecked' style='font-size: " + this.brushSizes[i] + "px'></i>");
+                let $size = $("<span class='size'>" + this.brushSizes[i] + "</span>");
+
+                $option.append($size);
 
                 let $optionWrapper = $("<div></div>")
                     .addClass("option-wrapper ui-stroke-option")

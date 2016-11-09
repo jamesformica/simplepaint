@@ -39,13 +39,8 @@ var simplepaint;
                 _this.$colourContainer.toggleClass("open");
             });
             $fill.click(function () {
-                var active = _this.drawingManager.toggleFillMode();
-                if (active) {
-                    _this.selectTool($fill);
-                }
-                else {
-                    _this.selectTool($brush);
-                }
+                _this.drawingManager.toggleFillMode(true);
+                _this.selectTool($fill);
             });
             this.$menu.find(".ui-clear").click(function () {
                 _this.drawingManager.startAgain();
@@ -91,13 +86,21 @@ var simplepaint;
                 this.colours = this.options.colours;
             }
             else {
-                this.colours = ["#2ecc71", "#1abc9c", "#3498db", "#f1c40f", "#e67e22", "#e74c3c", "#9b59b6", "#bdc3c7", "#7f8c8d", "#34495e", "red", "orange", "blue", "lime", "aqua", "magenta", "#000000", "#ffffff"];
+                var reds = ["#B71C1C", "#D32F2F", "#F44336", "#E57373"];
+                var purples = ["#4A148C", "#7B1FA2", "#9C27B0", "#BA68C8"];
+                var blues = ["#0D47A1", "#1976D2", "#2196F3", "#64B5F6"];
+                var teals = ["#004D40", "#00796B", "#009688", "#4DB6AC"];
+                var greens = ["#1B5E20", "#388E3C", "#4CAF50", "#81C784"];
+                var yellows = ["#F57F17", "#FBC02D", "#FFEB3B", "#FFF176"];
+                var oranges = ["#E65100", "#F57C00", "#FF9800", "#FFB74D"];
+                var shades = ["#000000", "#616161", "#9E9E9E", "#ffffff"];
+                this.colours = reds.concat(purples).concat(blues).concat(teals).concat(greens).concat(yellows).concat(oranges).concat(shades);
             }
             if (optionsSet && this.isNotNullOrUndefined(this.options.brushSizes)) {
                 this.brushSizes = this.options.brushSizes;
             }
             else {
-                this.brushSizes = [4, 8, 12, 16, 20, 24, 28, 32];
+                this.brushSizes = [4, 8, 12, 16, 20, 24, 28, 32, 36, 42, 48, 54, 60];
             }
             if (optionsSet && this.isNotNullOrUndefined(this.options.height)) {
                 this.$canvas.attr("height", this.options.height);
@@ -110,15 +113,13 @@ var simplepaint;
         };
         CanvasManager.prototype.setRandomColour = function () {
             var chosenColour;
-            do {
-                chosenColour = this.colours[Math.floor(Math.random() * this.colours.length)];
-            } while (chosenColour.toLowerCase() === "#ffffff" || chosenColour.toLowerCase() === "white");
-            this.selectColour(chosenColour);
+            var $chosenColour;
             var $allColours = this.$colourContainer.find(".ui-colour-option");
-            var $chosenColour = $allColours.filter(function (index, element) {
-                return $(element).data("colour") === chosenColour;
-            });
-            $chosenColour.addClass("selected");
+            do {
+                $chosenColour = $($allColours[Math.floor(Math.random() * this.colours.length)]);
+                chosenColour = $chosenColour.data("colour");
+            } while (chosenColour.toLowerCase() === "#ffffff" || chosenColour.toLowerCase() === "white");
+            $chosenColour.click();
         };
         CanvasManager.prototype.setMiddleStroke = function () {
             var $allStrokes = this.$strokeContainer.find(".ui-stroke-option");
@@ -167,6 +168,8 @@ var simplepaint;
         CanvasManager.prototype.buildStrokeOptions = function () {
             for (var i = 0; i < this.brushSizes.length; i++) {
                 var $option = $("<i class='icon-radio-unchecked' style='font-size: " + this.brushSizes[i] + "px'></i>");
+                var $size = $("<span class='size'>" + this.brushSizes[i] + "</span>");
+                $option.append($size);
                 var $optionWrapper = $("<div></div>")
                     .addClass("option-wrapper ui-stroke-option")
                     .data("stroke", this.brushSizes[i])
@@ -207,7 +210,7 @@ var simplepaint;
             var pixelStack = [[stage.mouseX, stage.mouseY]];
             var context = canvas.getContext("2d");
             var colourLayerData = context.getImageData(0, 0, canvas.width, canvas.height);
-            var clickPixel = (Math.floor(stage.mouseY) * Math.floor(canvas.width) + Math.floor(stage.mouseX)) * 4;
+            var clickPixel = Math.floor((stage.mouseY * canvas.width + stage.mouseX) * 4);
             var rgbaClickColour = getClickRgbaColour(colourLayerData, clickPixel);
             var rgbaFillColour = getFillRgbaColour(colour);
             if (areColoursTheSame(rgbaClickColour, rgbaFillColour)) {
@@ -223,7 +226,7 @@ var simplepaint;
                 newPos = pixelStack.pop();
                 x = Math.floor(newPos[0]);
                 y = Math.floor(newPos[1]);
-                pixelPos = (y * Math.floor(canvas.width) + x) * 4;
+                pixelPos = Math.floor((y * canvas.width + x) * 4);
                 while (y-- >= 0 && doesPixelMatchClickColour(pixelPos, colourLayerData, rgbaClickColour, rgbaFillColour)) {
                     pixelPos -= canvas.width * 4;
                 }
