@@ -42,12 +42,26 @@ module simplepaint {
 
         private attachEvents(): void {
             let $brush = this.$menu.find(".ui-brush");
+            let $erase = this.$menu.find(".ui-eraser");
             let $fill = this.$menu.find(".ui-fill");
             let $stroke = this.$menu.find(".ui-show-stroke");
 
             $brush.click(() => {
+                this.drawingManager.toggleEraseMode(false);
                 this.drawingManager.toggleFillMode(false);
                 this.selectTool($brush);
+            });
+
+            $erase.click(() => {
+                this.drawingManager.toggleEraseMode(true);
+                this.drawingManager.toggleFillMode(false);
+                this.selectTool($erase);
+            });
+
+            $fill.click(() => {
+                this.drawingManager.toggleEraseMode(false);
+                this.drawingManager.toggleFillMode(true);
+                this.selectTool($fill);
             });
 
             $stroke.click(() => {
@@ -58,11 +72,6 @@ module simplepaint {
             this.$menu.find(".ui-show-colour").click(() => {
                 this.$strokeContainer.removeClass("open");
                 this.$colourContainer.toggleClass("open");
-            });
-
-            $fill.click(() => {
-                this.drawingManager.toggleFillMode(true);
-                this.selectTool($fill);
             });
 
             this.$menu.find(".ui-clear").click(() => {
@@ -177,9 +186,10 @@ module simplepaint {
 
             let $b_menu = $("<div class=\"menu\"></div>");
             let $b_brushOption = $("<i class=\"icon-brush\" title=\"Brush\"></i>");
+            let $b_eraser = $("<i class=\"icon-eraser\" title=\"Eraser\"></i>");
+            let $b_fill = $("<i class=\"icon-bucket\" title=\"Fill\"></i>");
             let $b_colourOption = $("<i class=\"colour\" title=\"Colour\"></i>");
             let $b_sizeOption = $("<i class=\"icon-radio-unchecked\" title=\"Stroke\"></i>");
-            let $b_fill = $("<i class=\"icon-bucket\" title=\"Fill\"></i>");
             let $b_startAgainOption = $("<i class=\"icon-bin bottom\" title=\"Start Again\"></i>");
 
             let $b_strokeContainer = $("<div class=\"slider\"></div>");
@@ -200,7 +210,10 @@ module simplepaint {
             this.$colourContainer = $b_colourContainer.appendTo($simplePaintContainer);
             this.$canvas = $b_canvas.appendTo($simplePaintContainer);
 
-            let menuItems: JQuery[] = [this.wrapMenuItem($b_brushOption, "ui-brush selected")];
+            let menuItems: JQuery[] = [
+                this.wrapMenuItem($b_brushOption, "ui-brush selected"),
+                this.wrapMenuItem($b_eraser, "ui-eraser")
+                ];
 
             if (this.canFill()) {
                 menuItems.push(this.wrapMenuItem($b_fill, "ui-fill"));

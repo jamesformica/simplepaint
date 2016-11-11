@@ -12,6 +12,7 @@ module simplepaint {
         private index: number;
 
         private isFillMode: boolean;
+        private isErasing: boolean;
         private shapeLayer: createjs.Shape;
 
         private mouseMoveEvent: (event: any) => void;
@@ -20,6 +21,7 @@ module simplepaint {
             this.index = 0;
             this.stroke = 0;
             this.isFillMode = false;
+            this.isErasing = false;
 
             //check to see if we are running in a browser with touch support
             this.stage = new createjs.Stage(canvas);
@@ -46,14 +48,12 @@ module simplepaint {
             this.color = colour;
         }
 
-        public toggleFillMode(isFillMode?: boolean): boolean {
-            if (isFillMode !== undefined) {
-                this.isFillMode = isFillMode;
-            } else {
-                this.isFillMode = !this.isFillMode;
-            }
+        public toggleFillMode(isFillMode: boolean): void {
+            this.isFillMode = isFillMode;
+        }
 
-            return this.isFillMode;
+        public toggleEraseMode(isErasing: boolean): void {
+            this.isErasing = isErasing;
         }
 
         public startAgain(): void {
@@ -106,6 +106,8 @@ module simplepaint {
                 .beginStroke(this.color)
                 .beginFill(this.color)
                 .drawCircle(this.oldPoint.x, this.oldPoint.y, this.stroke / 2);
+
+            this.shapeLayer.compositeOperation = this.isErasing ? "destination-out" : "source-over";
 
             this.stage.update();
 
