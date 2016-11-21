@@ -76,7 +76,7 @@ module simplepaint {
 
             this.$menu.find(".ui-clear").click(() => {
                 this.drawingManager.startAgain();
-                this.selectTool($brush);
+                $brush.click();
             });
 
             this.$strokeContainer.on("click", ".ui-stroke-option", (e) => {

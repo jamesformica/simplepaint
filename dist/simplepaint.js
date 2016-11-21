@@ -52,7 +52,7 @@ var simplepaint;
             });
             this.$menu.find(".ui-clear").click(function () {
                 _this.drawingManager.startAgain();
-                _this.selectTool($brush);
+                $brush.click();
             });
             this.$strokeContainer.on("click", ".ui-stroke-option", function (e) {
                 _this.selectStroke($(e.currentTarget));
@@ -141,7 +141,7 @@ var simplepaint;
             var $b_simplePaint = $("<div class=\"simplepaint\"></div>");
             var $b_menu = $("<div class=\"menu\"></div>");
             var $b_brushOption = $("<i class=\"icon-brush\" title=\"Brush\"></i>");
-            var $b_eraser = $("<i class=\"icon-eraser\" title=\"eraser\"></i>");
+            var $b_eraser = $("<i class=\"icon-eraser\" title=\"Eraser\"></i>");
             var $b_fill = $("<i class=\"icon-bucket\" title=\"Fill\"></i>");
             var $b_colourOption = $("<i class=\"colour\" title=\"Colour\"></i>");
             var $b_sizeOption = $("<i class=\"icon-radio-unchecked\" title=\"Stroke\"></i>");
